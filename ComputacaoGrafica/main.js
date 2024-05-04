@@ -1,32 +1,32 @@
 import * as THREE from 'three';
 
-let camera, scene, renderer; // Definindo variáveis globais
+let camera, scene, renderer;
 
 function addBase(obj, x, y, z) {
     'use strict';
     const geometry = new THREE.BoxGeometry(3, 1, 3);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Corrigido para uma cor visível
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000 }); 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
-    obj.add(mesh); // Adicionando à cena, corrigido para scene
+    obj.add(mesh); 
 }
 
 function addBracoHorizontal(obj, x, y, z){
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 1, 11);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Corrigido para uma cor visível
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+11 , z+2.5);
-    obj.add(mesh); // Adicionando à cena, corrigido para scene
+    obj.add(mesh); 
 }
 
 function addTorso(obj, x , y ,z){
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 11, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Corrigido para uma cor visível
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000 }); 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+6 , z);
-    obj.add(mesh); // Adicionando à cena, corrigido para scene
+    obj.add(mesh); 
 }
 
 
@@ -59,7 +59,6 @@ function createBaseGrua(x, y, z) {
     
     addBase(gruaBase, 0, 0, 0);
     addTorso(gruaBase,0, 0, 0);
-    // Adicionando a grua à cena
     scene.add(gruaBase);
 }
 
@@ -138,7 +137,7 @@ document.addEventListener('keydown', (event) => {
             break;
     }
 
-    render(); // Adicione esta linha para renderizar a cena após mudar a câmera
+    render(); // Renderizar a cena após mudar a câmera
 });
 
 function setActiveCamera(name) {
