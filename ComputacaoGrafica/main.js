@@ -32,22 +32,36 @@ function addCabine(obj,x,y,z){
 function addCabosDeAço(x,y,z){
 }
 
-function addCaboTirante(obj, x, y, z) {
+function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     'use strict';
-    const geometry = new THREE.CylinderGeometry(0.05, 0.05, 4.2, 20);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000 , wireframe: true });
-    const mesh = new THREE.Mesh(geometry, material);
-  
-    // Criar um vetor que representa a direção desejada
-    const direction = new THREE.Vector3(0.125, -1, 1);
-    // Normalizar o vetor para garantir que tenha comprimento 1
+    // Calcular a posição do centro do cilindro
+    const centerX = (x1 + x2) / 2;
+    const centerY = (y1 + y2) / 2;
+    const centerZ = (z1 + z2) / 2;
+
+    // Calcular a altura do cilindro
+    const height = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2));
+
+    // Calcular a direção do cilindro
+    const direction = new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1);
     direction.normalize();
 
-    // Usar lookAt para orientar o cilindro na direção desejada
-    mesh.lookAt(mesh.position.clone().add(direction));
+    // Calcular o ângulo de rotação do cilindro
+    const angle = Math.acos(direction.y);
 
-    // Posicionar o cilindro
-    mesh.position.set(x-0.25, y+13, z-1.5);
+    // Calcular o eixo de rotação do cilindro
+    const axis = new THREE.Vector3();
+    axis.crossVectors(new THREE.Vector3(0, 1, 0), direction);
+    axis.normalize();
+
+    // Criar o cilindro
+    const geometry = new THREE.CylinderGeometry(0.05, 0.05, height, 20);
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000 , wireframe: true });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    // Posicionar e rotacionar o cilindro
+    mesh.position.set(centerX, centerY, centerZ);
+    mesh.rotateOnAxis(axis, angle);
 
     obj.add(mesh);
 }
@@ -99,7 +113,7 @@ function createOrthographicCamera(x, y, z, viewSize, name) {
 }
 
 function createPerspectiveCamera(x, y, z, name) {
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(x, y, z);
     camera.lookAt(scene.position);
     camera.name = name;
@@ -130,7 +144,7 @@ function createContraPeso(x,y,z){
 function createTirantesContraLanca(x,y,z){
     const Lanca = new THREE.Object3D();
     addLanca(Lanca,0,0,0);
-    addCaboTirante(Lanca,0,0,0);
+    addCaboTirante(Lanca,-0.5,11.5,-3,0,14.5,0);
     scene.add(Lanca);
 }
 
@@ -175,7 +189,10 @@ function createScene() {
     // Câmeras com projeção perspectiva
     const cameraPerspectiva = createPerspectiveCamera(0, 20, 20, 'Perspectiva');
     const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
+    //Extra Camara, nao necessaria na enterega final
+    const cameraPerspectivaLateral = createPerspectiveCamera(10, 20, 3, 'PerspectivaLateral');
 
+    scene.add(cameraPerspectivaLateral)
     scene.add(cameraPerspectiva);
     scene.add(cameraMovel);
 }
@@ -194,7 +211,7 @@ function init() {
     createScene();
 
     // Definindo a câmera inicialmente ativa
-    setActiveCamera('Frontal');
+    setActiveCamera('PerspectivaLateral');
 
     render();
 }
@@ -217,12 +234,12 @@ document.addEventListener('keydown', (event) => {
             setActiveCamera('Movel');
             break;
         case '6':
+            setActiveCamera('PerspectivaLateral')
             //TODO: Implementar lógica para alternar para a câmera móvel
             break;
         default:
             break;
     }
-
     render(); // Renderizar a cena após mudar a câmera
 });
 
