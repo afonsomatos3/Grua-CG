@@ -34,39 +34,43 @@ function addCabosDeAço(x,y,z){
 
 function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     'use strict';
-    // Calcular a posição do centro do cilindro
+    // Calcular a posição central 
     const centerX = (x1 + x2) / 2;
     const centerY = (y1 + y2) / 2;
     const centerZ = (z1 + z2) / 2;
 
-    // Calcular a altura do cilindro
+    // Calcular a altura 
     const height = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2));
 
-    // Calcular a direção do cilindro
+    // Calcular a direção 
     const direction = new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1);
     direction.normalize();
 
-    // Calcular o ângulo de rotação do cilindro
+    // Calcular o ângulo de rotação 
     const angle = Math.acos(direction.y);
 
-    // Calcular o eixo de rotação do cilindro
+    // Calcular o eixo de rotação
     const axis = new THREE.Vector3();
     axis.crossVectors(new THREE.Vector3(0, 1, 0), direction);
     axis.normalize();
 
-    // Criar o cilindro
     const geometry = new THREE.CylinderGeometry(0.05, 0.05, height, 20);
     const material = new THREE.MeshBasicMaterial({ color: 0x000000 , wireframe: true });
     const mesh = new THREE.Mesh(geometry, material);
-
-    // Posicionar e rotacionar o cilindro
     mesh.position.set(centerX, centerY, centerZ);
     mesh.rotateOnAxis(axis, angle);
 
     obj.add(mesh);
 }
 
-
+function addCarrinhoTranslacao(obj,x,y,z){
+    'use strict';
+    const geometry = new THREE.BoxGeometry(1, 0.25, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y+10.375 , z+5.5);
+    obj.add(mesh); 
+}
 
 function addContraPeso(obj,x,y,z){
     'use strict';
@@ -75,6 +79,15 @@ function addContraPeso(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+10.25 , z-2);
     obj.add(mesh); 
+}
+
+function addGarraArticulada(obj,x,y,z){
+    'use strict';
+    const geometry = new THREE.BoxGeometry(1, 0.5, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true }); 
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y+8.125 , z+4);
+    obj.add(mesh);
 }
 
 function addPortaLanca(obj, x, y, z) {
@@ -134,48 +147,83 @@ function createTorreComPortaLancas(x,y,z){
     scene.add(TorreComPortaLancas);
 }
 
-function createContraPeso(x,y,z){
+function createContraPeso(obj,x,y,z){
     const ContraPeso = new THREE.Object3D();
     addContraPeso(ContraPeso,0,0,0);
     scene.add(ContraPeso);
 }
 
 //Braço horizontal
-function createTirantesContraLanca(x,y,z){
+function createTirantesContraLanca(obj,x,y,z){
     const Lanca = new THREE.Object3D();
     addLanca(Lanca,0,0,0);
     addCaboTirante(Lanca,-0.5,11.5,-3,0,14.5,0);
-    scene.add(Lanca);
+    addCaboTirante(Lanca,0.5,11.5,-3,0,14.5,0);
+    addCaboTirante(Lanca,0,11.5,4,0,14.5,0);
+    obj.add(Lanca);
 }
 
-function createCabine(x,y,z){
+function createCabine(obj,x,y,z){
     const Cabine = new THREE.Object3D();
     addCabine(Cabine,0,0,0);
-    scene.add(Cabine);
+    obj.add(Cabine);
 }
 
-function createCarrinhoTranslacao(x,y,z){
-
-}
-
-function createCaboDeAcoDoGancho(x,y,z){
-}
-
-function createGarraArticuladaDe4(x,y,z){
+function createCarrinhoTranslacao(obj,x,y,z){
+    const Carrinhotranslacao = new THREE.Object3D();
+    addCarrinhoTranslacao(Carrinhotranslacao,0,0,0);
+    createGarraArticuladaDe4(0,0,0);
+    obj.add(Carrinhotranslacao);
 
 }
 
+function createCaboDeAcoDoGancho(obj,x,y,z){
+}
+
+function createGarraArticuladaDe4(obj,x,y,z){ 
+    const GarraArticulada = new THREE.Object3D();
+    addGarraArticulada(GarraArticulada,0,0,0);
+    obj.add(GarraArticulada);
+}
+
+function createGrua_Superior(obj,x,y,z){
+    createCabine(obj,0,0,0);
+    createTirantesContraLanca(obj,0,0,0);
+    createContraPeso(obj,0,0,0);
+    //createCarrinho_E_Garra(obj,0,0,0);
+    
+}
+
+function createCarrinho_E_Garra(Carrinho_E_Garra,x,y,z){
+    
+    createCarrinhoTranslacao(Carrinho_E_Garra,0,0,0);
+    
+    createMovimentoGarra(x,y,z);
+}
+
+function createMovimentoGarra(x,y,z){
+    
+}
 function createScene() {
     'use strict';
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     scene.add(new THREE.AxesHelper(10));
-
+    //Create Topo 
+    //Create Carrinho+Garra 
+    //Create Base da Grua
+    var Grua_Superior = new THREE.Object3D();
+    var Carrinho_E_Garra = new THREE.Object3D();
+    var Movimento_Garra = new THREE.Object3D();
+    //Cria Base da Grua
     createBaseGrua(0, 0, 0);
     createTorreComPortaLancas(0,0,0);
-    createCabine(0,0,0);
-    createTirantesContraLanca(0,0,0);
-    createContraPeso(0,0,0);
+    //Cria a Parte superior da grua
+    createGrua_Superior(Grua_Superior,0,0,0);
+
+    scene.add(Grua_Superior);
+    //scene.add(Carrinho_E_Garra);
+    //scene.add(Movimento_Garra);
     // Câmeras ortográficas
     const viewSize = 30;
     const cameraFrontal = createOrthographicCamera(0, 0, 50, viewSize, 'Frontal');
@@ -210,7 +258,6 @@ function init() {
 
     createScene();
 
-    // Definindo a câmera inicialmente ativa
     setActiveCamera('PerspectivaLateral');
 
     render();
