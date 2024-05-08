@@ -25,11 +25,8 @@ function addCabine(obj,x,y,z){
     const geometry = new THREE.BoxGeometry(1, 2, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x-1, y+10 , z);
+    mesh.position.set(x, y , z);
     obj.add(mesh); 
-}
-
-function addCabosDeAço(x,y,z){
 }
 
 function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
@@ -68,7 +65,7 @@ function addCarrinhoTranslacao(obj,x,y,z){
     const geometry = new THREE.BoxGeometry(1, 0.25, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y+10.375 , z+5.5);
+    mesh.position.set(x, y , z);
     obj.add(mesh); 
 }
 
@@ -81,12 +78,21 @@ function addContraPeso(obj,x,y,z){
     obj.add(mesh); 
 }
 
+function addDenteGarra(obj,x,y,z){
+    'use strict';
+    const geometry = new THREE.BoxGeometry(1, 0.5, 0.2);
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true }); 
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y , z);
+    obj.add(mesh); 
+}
+
 function addGarraArticulada(obj,x,y,z){
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 0.5, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true }); 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y+8.125 , z+4);
+    mesh.position.set(x, y , z);
     obj.add(mesh);
 }
 
@@ -133,6 +139,26 @@ function createPerspectiveCamera(x, y, z, name) {
     return camera;
 }
 
+function createCameraWithinGarra(obj,x,y,z) {
+    // Criar a câmera ortográfica
+    const camera = new THREE.OrthographicCamera(
+        -5, // left
+        5, // right
+        5, // top
+        -5, // bottom
+        1, // near
+        1000 // far
+    );
+    camera.name = "Garra";
+    // Definir a posição da câmera dentro da garra
+    camera.position.set(x,y,z); // Posição relativa à garra
+
+    // Definir a direção de visualização da câmera
+    camera.lookAt(x, 0, z); // A câmera aponta para baixo
+
+    obj.add(camera);
+}
+
 function createBaseGrua(x, y, z) {
     const gruaBase = new THREE.Object3D();
     addBase(gruaBase, 0, 0, 0);
@@ -157,7 +183,7 @@ function createContraPeso(obj,x,y,z){
 function createTirantesContraLanca(obj,x,y,z){
     const Lanca = new THREE.Object3D();
     addLanca(Lanca,0,0,0);
-    addCaboTirante(Lanca,-0.5,11.5,-3,0,14.5,0);
+    addCaboTirante(Lanca,0.5,11.5,-3,0,14.5,0);
     addCaboTirante(Lanca,0.5,11.5,-3,0,14.5,0);
     addCaboTirante(Lanca,0,11.5,4,0,14.5,0);
     obj.add(Lanca);
@@ -165,14 +191,14 @@ function createTirantesContraLanca(obj,x,y,z){
 
 function createCabine(obj,x,y,z){
     const Cabine = new THREE.Object3D();
-    addCabine(Cabine,0,0,0);
+    addCabine(Cabine,-1,10,0);
     obj.add(Cabine);
 }
 
 function createCarrinhoTranslacao(obj,x,y,z){
     const Carrinhotranslacao = new THREE.Object3D();
-    addCarrinhoTranslacao(Carrinhotranslacao,0,0,0);
-    createGarraArticuladaDe4(0,0,0);
+    addCarrinhoTranslacao(Carrinhotranslacao,0,10.375,5.5);
+    createGarraArticuladaDe4(obj,0,0,0);
     obj.add(Carrinhotranslacao);
 
 }
@@ -182,28 +208,33 @@ function createCaboDeAcoDoGancho(obj,x,y,z){
 
 function createGarraArticuladaDe4(obj,x,y,z){ 
     const GarraArticulada = new THREE.Object3D();
-    addGarraArticulada(GarraArticulada,0,0,0);
+    createCameraWithinGarra(GarraArticulada,0,8.125,5.5)
+    addGarraArticulada(GarraArticulada,0,8.125,5.5);
+    addCaboTirante(GarraArticulada,0,8.125,5.5,0,10.375,5.5);
+    addDenteGarra(GarraArticulada,0,7.625,5.125);
+    addDenteGarra(GarraArticulada,0,7.625,5.875);
     obj.add(GarraArticulada);
 }
 
 function createGrua_Superior(obj,x,y,z){
-    createCabine(obj,0,0,0);
-    createTirantesContraLanca(obj,0,0,0);
-    createContraPeso(obj,0,0,0);
-    //createCarrinho_E_Garra(obj,0,0,0);
+    createCabine(obj,x,y,z);
+    createTirantesContraLanca(obj,x,y,z);
+    createContraPeso(obj,x,y,z);
+    createCarrinho_E_Garra(obj,x,y,z);
     
 }
 
 function createCarrinho_E_Garra(Carrinho_E_Garra,x,y,z){
     
-    createCarrinhoTranslacao(Carrinho_E_Garra,0,0,0);
+    createCarrinhoTranslacao(Carrinho_E_Garra,x,y,z);
     
-    createMovimentoGarra(x,y,z);
+    //createMovimentoGarra(x,y,z);
 }
 
 function createMovimentoGarra(x,y,z){
     
 }
+
 function createScene() {
     'use strict';
     scene = new THREE.Scene();
@@ -220,7 +251,7 @@ function createScene() {
     createTorreComPortaLancas(0,0,0);
     //Cria a Parte superior da grua
     createGrua_Superior(Grua_Superior,0,0,0);
-
+    
     scene.add(Grua_Superior);
     //scene.add(Carrinho_E_Garra);
     //scene.add(Movimento_Garra);
@@ -230,19 +261,22 @@ function createScene() {
     const cameraLateral = createOrthographicCamera(-50, 0, 0, viewSize, 'Lateral');
     const cameraTopo = createOrthographicCamera(0, 50, 0, viewSize, 'Topo');
 
+
     scene.add(cameraFrontal);
     scene.add(cameraLateral);
     scene.add(cameraTopo);
 
     // Câmeras com projeção perspectiva
-    const cameraPerspectiva = createPerspectiveCamera(0, 20, 20, 'Perspectiva');
+    const cameraPerspectiva = createPerspectiveCamera(10, 20, 3,'Perspectiva');
     const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
     //Extra Camara, nao necessaria na enterega final
-    const cameraPerspectivaLateral = createPerspectiveCamera(10, 20, 3, 'PerspectivaLateral');
+    const cameraOrtograficaDinamica = createOrthographicCamera(-10, -20, -5,viewSize, 'OrtograficaDinamica');
 
-    scene.add(cameraPerspectivaLateral)
+    scene.add(cameraOrtograficaDinamica)
     scene.add(cameraPerspectiva);
     scene.add(cameraMovel);
+
+
 }
 
 function render() {
@@ -258,7 +292,7 @@ function init() {
 
     createScene();
 
-    setActiveCamera('PerspectivaLateral');
+    setActiveCamera('Frontal');
 
     render();
 }
@@ -267,6 +301,7 @@ document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case '1':
             setActiveCamera('Frontal');
+            //TODO: alternar entre grid e opaco ( objetos )
             break;
         case '2':
             setActiveCamera('Lateral');
@@ -278,20 +313,56 @@ document.addEventListener('keydown', (event) => {
             setActiveCamera('Perspectiva');
             break;
         case '5':
-            setActiveCamera('Movel');
+            //FIXME: Nao sei o que fazer com esta camara
+            setActiveCamera('OrtograficaDinamica');
             break;
         case '6':
-            setActiveCamera('PerspectivaLateral')
+            setActiveCamera('Garra')
             //TODO: Implementar lógica para alternar para a câmera móvel
+            break;
+        case 'q':
+        case 'Q':
+            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            break;
+        case 'a':
+        case 'A':
+            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            break;
+        case 'w':
+        case 'W':
+            //TODO: controlar deslocamento que translada o carrinho de translacao
+            break;
+        case 's':
+        case 'S':
+            //TODO: controlar deslocamento que translada o carrinho de translacao
+            break;
+        case 'e':
+        case 'E':
+            //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
+            break;
+        case 'd':
+        case 'D':
+            //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
+            break;
+        case 'r':
+        case 'R':
+            //TODO: controlar angulo de abertura/fecho da garra
+            break;
+        case 'f':
+        case 'F':
+            //TODO: controlar angulo de abertura/fecho da garra
             break;
         default:
             break;
+        // NOTA:
+        // podem carregar em varios botoes ao mesmo tempo
+        // os valores de rotacao/translacao estao bounded
     }
     render(); // Renderizar a cena após mudar a câmera
 });
 
 function setActiveCamera(name) {
-    scene.traverse((object) => {
+    scene.traverse((object) => {2
         if (object.isCamera) {
             object.layers.disable(1);
         }
