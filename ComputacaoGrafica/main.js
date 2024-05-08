@@ -20,6 +20,7 @@ function addLanca(obj, x, y, z){
     mesh.position.set(x, y+11 , z+2.5);
     obj.add(mesh); 
 }
+
 function addCabine(obj,x,y,z){
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 2, 1);
@@ -66,8 +67,6 @@ function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     obj.add(mesh);
 }
 
-
-
 function addContraPeso(obj,x,y,z){
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 0.5, 1);
@@ -85,7 +84,6 @@ function addPortaLanca(obj, x, y, z) {
     mesh.position.set(x, y + 13, z);
     obj.add(mesh);
 }
-
 
 function addTorreMetalica(obj, x, y, z) {
     'use strict';
@@ -220,6 +218,7 @@ document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case '1':
             setActiveCamera('Frontal');
+            //TODO: alternar entre grid e opaco ( objetos )
             break;
         case '2':
             setActiveCamera('Lateral');
@@ -237,8 +236,43 @@ document.addEventListener('keydown', (event) => {
             setActiveCamera('PerspectivaLateral')
             //TODO: Implementar lógica para alternar para a câmera móvel
             break;
+        case 'q':
+        case 'Q':
+            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            break;
+        case 'a':
+        case 'A':
+            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            break;
+        case 'w':
+        case 'W':
+            //TODO: controlar deslocamento que translada o carrinho de translacao
+            break;
+        case 's':
+        case 'S':
+            //TODO: controlar deslocamento que translada o carrinho de translacao
+            break;
+        case 'e':
+        case 'E':
+            //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
+            break;
+        case 'd':
+        case 'D':
+            //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
+            break;
+        case 'r':
+        case 'R':
+            //TODO: controlar angulo de abertura/fecho da garra
+            break;
+        case 'f':
+        case 'F':
+            //TODO: controlar angulo de abertura/fecho da garra
+            break;
         default:
             break;
+        // NOTA:
+        // podem carregar em varios botoes ao mesmo tempo
+        // os valores de rotacao/translacao estao bounded
     }
     render(); // Renderizar a cena após mudar a câmera
 });
