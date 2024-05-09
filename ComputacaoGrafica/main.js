@@ -247,7 +247,7 @@ function createContraPeso(obj){
     obj.add(ContraPeso);
 }
 
-//Braço horizontal
+//Braco horizontal
 function createTirantesContraLanca(obj){
     'use strict';
     const Lanca = new THREE.Object3D();
@@ -269,22 +269,22 @@ function createCabine(obj){
 function createCarrinho_E_Garra(obj){
     'use strict';
     const Carrinhotranslacao = new THREE.Object3D();
-    Carrinhotranslacao.translateZ(t);                   // add here the value for the carrinho translation
-    addCarrinhoTranslacao(Carrinhotranslacao,0,10.375,5.5);
-    createGarra_Sobe_Desce(Carrinhotranslacao);
-    obj.add(Carrinhotranslacao);
+    //Carrinhotranslacao.translateZ(t);                   // add here the value for the carrinho translation
+    addCarrinhoTranslacao(Carrinho,0,10.375,5.5);
+    createGarra_Sobe_Desce(Carrinho);
+    obj.add(Carrinho);
 
 }
 
 function createGarra_Sobe_Desce(obj){
     'use strict';
-    const Cabo_e_garra = new THREE.Object3D();    //       add value for claw translation
-    addCaboTirante(Cabo_e_garra,0,8.125-desce_garra,5.5,0,10.375,5.5);
-    createGarraArticulada(Cabo_e_garra,desce_garra);
-    obj.add(Cabo_e_garra);
+    addCaboTirante(Cabo_Da_Garra,0,8.125-desce_garra,5.5,0,10.375,5.5);
+    createGarraArticulada(Garra,desce_garra);
+    obj.add(Garra);
+    obj.add(Cabo_Da_Garra);
 }
 
-function createGarraArticulada(obj,t){   //Garra com 4 dentes?
+function createGarraArticulada(obj,t){   //Garra com 2 dentes?
     'use strict';
     const GarraArticulada = new THREE.Object3D();
     createCameraWithinGarra(GarraArticulada,0,8.125-t,5.5)
@@ -388,7 +388,6 @@ document.addEventListener('keydown', (event) => {
             break;
         case '6':
             setActiveCamera('Garra')
-            //TODO: Implementar lógica para alternar para a câmera móvel
             break;
         case '7':
             scene.traverse(function(obj) {
@@ -397,36 +396,32 @@ document.addEventListener('keydown', (event) => {
                     obj.material.wireframe = !obj.material.wireframe;
                 }
             });    
-        //TODO: alternar entre grid e opaco ( wirefram dos objetos )
             break;
         case 'q':
 
         case 'Q':
-            rot= rot+Math.PI / 300;
-            //rotate G_superior by on radian every time the "Q" is pressed
-
-            G_Superior.rotation.set(0, rot, 0);
-            //scene.remove(G_Superior);
-            // Incrementa o ângulo de rotação (em radianos)
             
-            //rotationAngle += Math.PI / 180; // Incrementa 1 grau
-            // Atualiza a rotação da seção superior incluindo a cabine
-            //rotateSection(rotationAngle);
+            rot+= 0.06;
             break;
 
-            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
-            break;
         case 'a':
         case 'A':
-            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            rot -= 0.06;
             break;
         case 'w':
         case 'W':
-            //TODO: controlar deslocamento que translada o carrinho de translacao
+            if(Carrinho.position.z < 2){
+                move_carrinho = +0.05;
+                Carrinho.translateZ(move_carrinho);
+            }
             break;
         case 's':
         case 'S':
-            //TODO: controlar deslocamento que translada o carrinho de translacao
+            
+            if(Carrinho.position.z > -3.5){
+                move_carrinho = -0.05;
+                Carrinho.translateZ(move_carrinho);
+            }
             break;
         case 'e':
         case 'E':
@@ -453,14 +448,6 @@ document.addEventListener('keydown', (event) => {
     render(); // Renderizar a cena após mudar a câmera
 });
 
-function rotateSection(angle) {
-    const gruaSuperior = scene.getObjectByName('Grua_Superior');
-    if (gruaSuperior) {
-        gruaSuperior.rotation.y = angle; // Rotate around the y-axis
-    } else {
-        console.error("Grua_Superior object not found in the scene!"); // Usar console.error para erros
-    }
-}
 
 function setActiveCamera(name) {
     'use strict';
@@ -486,15 +473,19 @@ function onResize() {
 
 function animate() {
     'use strict';
-    rot+=0.3;
+    G_Superior.rotation.set(0, rot, 0);
     render();
     requestAnimationFrame(animate);
 }
 
 var G_Superior = new THREE.Object3D();
+var Cabo_Da_Garra =  new THREE.Object3D();
+var Garra = new THREE.Object3D();
+var Carrinho = new THREE.Object3D();
 var rot = 0;
-var t = 0;
 var desce_garra = 0;
+var desce_cabo = 0;
+var move_carrinho = 0;
 
 
 init();
