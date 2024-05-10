@@ -1,11 +1,208 @@
 import * as THREE from 'three';
 
+////////////////////////
+/*  GLOBAL VARIABLES  */
+////////////////////////
 
 let camera, scene, renderer;
 let vector_cargas = [[5,0,-5],[-5,0,5], [4,0,0],[-4,0,-4],[0,0,5]];
 let geometries = [THREE.BoxGeometry,THREE.DodecahedronGeometry,THREE.IcosahedronGeometry,THREE.TorusGeometry,THREE.TorusKnotGeometry];
+var isBright_15 = false; // toggle variable for key '7'
 
-//let rotationAngle;
+// Variables for computing objects' movement
+var G_Superior = new THREE.Object3D();
+var Cabo_Da_Garra =  new THREE.Object3D();
+var Garra = new THREE.Object3D();
+var Carrinho = new THREE.Object3D();
+var rot = 0;
+var desce_cabo = 10.375;
+var move_carrinho = 0;
+var desce_garra_teste = 0;
+var altura_cabo = 2.25;
+var cont = 0;
+
+var strings = ["Q/q - Rodar Contra-Lança", "A/a - Rodar Contra-Lança", "W/w - Transladar Carrinho",
+                "S/s - Transladar carrinho", "E/e - Subir Garra", "D/d - Descer Garra", "R/r - Abrir Garra",
+                "F/f - Fechar Garra", "1 - Vista Frontal", "2 - Vista Lateral", "3 - Vista de Topo", 
+                "4 - Ortogonal Fixa", "5 - Perspetiva Fixa", "6 - Perspetiva Móvel", "7 - Alternar Wireframe"];
+
+class Manager {
+
+    constructor() {
+        this.materialsVector = [];
+    }
+
+    addToVector(material) {
+        this.materialsVector.push(material);
+    }
+
+    toggleWireframe() {
+        this.materialsVector.forEach(material => {
+            material.wireframe = !material.wireframe;
+        });
+    }
+
+}
+
+let manager = new Manager();
+
+//////////////////
+/*     HUD      */
+//////////////////
+
+function updateHUD(strings) {
+    document.getElementById("hud").innerHTML = "<span id='string1'>" + strings[0] + "</span><br><span id='string2'>"
+    + strings[1] + "</span><br><span id='string3'>" + strings[2] + "</span><br><span id='string4'>"
+    + strings[3] + "</span><br><span id='string5'>" + strings[4] + "</span><br><span id='string6'>"
+    + strings[5] + "</span><br><span id='string7'>" + strings[6] + "</span><br><span id='string8'>"
+    + strings[7] + "</span><br><span id='string9'>" + strings[8] + "</span><br><span id='string10'>"
+    + strings[9] + "</span><br><span id='string11'>" + strings[10] + "</span><br><span id='string12'>"
+    + strings[11] + "</span><br><span id='string13'>" + strings[12] + "</span><br><span id='string14'>"
+    + strings[13] + "</span><br><span id='string15'>" + strings[14] + "</span>";
+}
+
+// Functions that modify brightness of each HUD element
+function toggleBrightness_1(pressed) {
+    var hudElement = document.getElementById("string1");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_2(pressed) {
+    var hudElement = document.getElementById("string2");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_3(pressed) {
+    var hudElement = document.getElementById("string3");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_4(pressed) {
+    var hudElement = document.getElementById("string4");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_5(pressed) {
+    var hudElement = document.getElementById("string5");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_6(pressed) {
+    var hudElement = document.getElementById("string6");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_7(pressed) {
+    var hudElement = document.getElementById("string7");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_8(pressed) {
+    var hudElement = document.getElementById("string8");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
+}
+
+function toggleBrightness_9() {
+var hudElement = document.getElementById("string9");
+resetCameraHUD();
+hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+}
+
+function toggleBrightness_10() {
+var hudElement = document.getElementById("string10");
+resetCameraHUD();
+hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+}
+
+function toggleBrightness_11() {
+var hudElement = document.getElementById("string11");
+resetCameraHUD();
+hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+}
+
+function toggleBrightness_12() {
+var hudElement = document.getElementById("string12");
+resetCameraHUD();
+hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+}
+
+function toggleBrightness_13() {
+var hudElement = document.getElementById("string13");
+resetCameraHUD();
+hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+}
+
+function toggleBrightness_14() {
+var hudElement = document.getElementById("string14");
+resetCameraHUD();
+hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+}
+
+function toggleBrightness_15() {
+var hudElement = document.getElementById("string15");
+if (isBright_15) {
+    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    isBright_15 = false;
+} else {
+    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    isBright_15 = true;
+}
+}
+
+// resets HUD's camera elements' brightness once another camera key is pressed
+function resetCameraHUD() {
+
+var hudElement_9 = document.getElementById("string9");
+var hudElement_10 = document.getElementById("string10");
+var hudElement_11 = document.getElementById("string11");
+var hudElement_12 = document.getElementById("string12");
+var hudElement_13 = document.getElementById("string13");
+var hudElement_14 = document.getElementById("string14");
+
+hudElement_9.style.backgroundColor = "rgba(0, 0, 0, 0)";
+hudElement_10.style.backgroundColor = "rgba(0, 0, 0, 0)";
+hudElement_11.style.backgroundColor = "rgba(0, 0, 0, 0)";
+hudElement_12.style.backgroundColor = "rgba(0, 0, 0, 0)";
+hudElement_13.style.backgroundColor = "rgba(0, 0, 0, 0)";
+hudElement_14.style.backgroundColor = "rgba(0, 0, 0, 0)";
+
+}
+
+////////////////////////////////////
+/*  AUXILIARY BUILDING FUNCTIONS  */
+////////////////////////////////////
 
 function addBase(obj, x, y, z) {
     'use strict';
@@ -14,6 +211,8 @@ function addBase(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addBaseContentor(obj, x, y, z) {
@@ -23,6 +222,8 @@ function addBaseContentor(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addLadosContentores_dir_esq(obj, x, y, z) {
@@ -32,6 +233,8 @@ function addLadosContentores_dir_esq(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addLadosContentores_frente_tras(obj, x, y, z) {
@@ -41,6 +244,8 @@ function addLadosContentores_frente_tras(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addCarga(obj, position_number) {
@@ -76,9 +281,9 @@ function addCarga(obj, position_number) {
     mesh.position.set(vector_cargas[position_number][0], vector_cargas[position_number][1]+dimension, vector_cargas[position_number][2]);
     vector_cargas[position_number][3] = dimension;
     obj.add(mesh);
-}
 
-    
+    manager.addToVector(material);
+}
 
 function addLanca(obj, x, y, z){
     'use strict';
@@ -87,7 +292,10 @@ function addLanca(obj, x, y, z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+11 , z+2.5);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
+
 function addCabine(obj,x,y,z){
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 2, 1);
@@ -95,6 +303,8 @@ function addCabine(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
@@ -126,6 +336,8 @@ function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     mesh.rotateOnAxis(axis, angle);
 
     obj.add(mesh);
+
+    manager.addToVector(material);
 }
 
 function addCarrinhoTranslacao(obj,x,y,z){
@@ -134,7 +346,9 @@ function addCarrinhoTranslacao(obj,x,y,z){
     const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
-    obj.add(mesh); 
+    obj.add(mesh);
+    
+    manager.addToVector(material);
 }
 
 function addContraPeso(obj,x,y,z){
@@ -144,6 +358,8 @@ function addContraPeso(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+10.25 , z-2);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addDenteGarra(obj,x,y,z){
@@ -153,6 +369,8 @@ function addDenteGarra(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addGarraArticulada(obj,x,y,z){
@@ -162,6 +380,8 @@ function addGarraArticulada(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh);
+
+    manager.addToVector(material);
 }
 
 function addPortaLanca(obj, x, y, z) {
@@ -171,8 +391,9 @@ function addPortaLanca(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y + 13, z);
     obj.add(mesh);
-}
 
+    manager.addToVector(material);
+}
 
 function addTorreMetalica(obj, x, y, z) {
     'use strict';
@@ -181,6 +402,8 @@ function addTorreMetalica(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y + 6, z);
     obj.add(mesh);
+
+    manager.addToVector(material);
 }
 
 function createOrthographicCamera(x, y, z, viewSize, name) {
@@ -319,7 +542,7 @@ function createGarra_Sobe_Desce(obj){
     obj.add(Cabo_Da_Garra);
 }
 
-function createGarraArticulada(obj){   //Garra com 2 dentes?
+function createGarraArticulada(obj){
     'use strict';
     const GarraArticulada = new THREE.Object3D();
     createCameraWithinGarra(GarraArticulada,0,8.125,5.5)
@@ -332,7 +555,7 @@ function createGarraArticulada(obj){   //Garra com 2 dentes?
 function createGrua_Superior(obj, r){
     'use strict';
     var Grua_Superior = new THREE.Object3D();
-    Grua_Superior.rotation.set(0, r, 0)  //add value for rotation in rad (Math.PI)
+    Grua_Superior.rotation.set(0, r, 0)  // rotation value is in radians
     createCabine(Grua_Superior);
     createTirantesContraLanca(Grua_Superior);
     createContraPeso(Grua_Superior);
@@ -380,7 +603,6 @@ function createScene() {
     scene.add(cameraPerspectiva);
     scene.add(cameraMovel);
 
-
 }
 
 function render() {
@@ -397,8 +619,6 @@ function init() {
     createScene();
 
     setActiveCamera('Frontal');
-    scene.r
-    //render();
     
     window.addEventListener('resize', onResize);
 }
@@ -408,40 +628,41 @@ document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case '1':
             setActiveCamera('Frontal');
+            toggleBrightness_9();
             break;
         case '2':
             setActiveCamera('Lateral');
+            toggleBrightness_10();
             break;
         case '3':
             setActiveCamera('Topo');
+            toggleBrightness_11();
             break;
         case '4':
             setActiveCamera('Perspectiva');
+            toggleBrightness_12();
             break;
         case '5':
             //FIXME: Nao sei o que fazer com esta camara
             setActiveCamera('OrtograficaDinamica');
+            toggleBrightness_13();
             break;
         case '6':
-            setActiveCamera('Garra')
+            setActiveCamera('Garra');
+            toggleBrightness_14();
             break;
         case '7':
-            scene.traverse(function(obj) {
-                // check if its a instance of a 3D object
-                if (obj instanceof THREE.Mesh) {
-                    obj.material.wireframe = !obj.material.wireframe;
-                }
-            });    
+            manager.toggleWireframe();
+            toggleBrightness_15();
             break;
         case 'q':
-
         case 'Q':
-            
+            toggleBrightness_1(true);
             rot+= 0.06;
             break;
-
         case 'a':
         case 'A':
+            toggleBrightness_2(true);
             rot -= 0.06;
             break;
         case 'w':
@@ -450,14 +671,15 @@ document.addEventListener('keydown', (event) => {
                 move_carrinho = +0.05;
                 Carrinho.translateZ(move_carrinho);
             }
+            toggleBrightness_3(true);
             break;
         case 's':
         case 'S':
-            
             if(Carrinho.position.z > -3.5){
                 move_carrinho = -0.05;
                 Carrinho.translateZ(move_carrinho);
             }
+            toggleBrightness_4(true);
             break;
         case 'e':
         case 'E':
@@ -470,8 +692,7 @@ document.addEventListener('keydown', (event) => {
                 altura_cabo = 2.25-desce_garra_teste;
                 Garra.position.y = altura_cabo;             //baixar garra
             }
-            
-
+            toggleBrightness_5(true);
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'd':
@@ -485,31 +706,67 @@ document.addEventListener('keydown', (event) => {
                 altura_cabo = 2.25-desce_garra_teste;
                 Garra.position.y = altura_cabo;          //baixar garra
             }
-            
+            toggleBrightness_6(true);            
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'r':
         case 'R':
-
+            toggleBrightness_7(true);
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         case 'f':
         case 'F':
+            toggleBrightness_8(true);
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         default:
             break;
-        // NOTA:
-        // podem carregar em varios botoes ao mesmo tempo
-        // os valores de rotacao/translacao estao bounded
     }
     render(); // Renderizar a cena após mudar a câmera
 });
 
+document.addEventListener('keyup', (event) => {
+    switch (event.key) {
+        case 'q':
+        case 'Q':
+            toggleBrightness_1(false);
+            break;
+        case 'a':
+        case 'A':
+            toggleBrightness_2(false);
+            break;
+        case 'w':
+        case 'W':
+            toggleBrightness_3(false);
+            break;
+        case 's':
+        case 'S':
+            toggleBrightness_4(false);
+            break;
+        case 'e':
+        case 'E':
+            toggleBrightness_5(false);
+            break;
+        case 'd':
+        case 'D':
+            toggleBrightness_6(false);
+            break;
+        case 'r':
+        case 'R':
+            toggleBrightness_7(false);
+            break;
+        case 'f':
+        case 'F':
+            toggleBrightness_8(false);
+            break;
+        default:
+            break;
+    }
+});
 
 function setActiveCamera(name) {
     'use strict';
-    scene.traverse((object) => {2
+    scene.traverse((object) => {
         if (object.isCamera) {
             object.layers.disable(1);
         }
@@ -536,17 +793,14 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-var G_Superior = new THREE.Object3D();
-var Cabo_Da_Garra =  new THREE.Object3D();
-var Garra = new THREE.Object3D();
-var Carrinho = new THREE.Object3D();
-var rot = 0;
-var desce_garra = 0;
-var desce_cabo = 10.375;
-var move_carrinho = 0;
-var desce_garra_teste = 0;
-var altura_cabo = 2.25;
-var cont = 0;
+updateHUD(strings);
+init();
+animate();
+
+////// para apagar ///
+
+// var desce_garra = 0;
+/*
 
 // Função para verificar colisões entre dois objetos
 function checkCollision(object1, object2) {
@@ -555,8 +809,55 @@ function checkCollision(object1, object2) {
     return box1.intersectsBox(box2);
 }
 
+case '5':
+            setActiveCamera('Movel');
+            toggleBrightness_13();
+            break;
 
 
+function setActiveCamera(name) {
+    scene.traverse((object) => {
+        if (object.isCamera) {
+            object.layers.disable(1);
+        }
+    });
+    const activeCamera = scene.getObjectByName(name);
+    if (activeCamera) {
+        activeCamera.layers.enable(1);
+        camera = activeCamera;
+    }
+}
 
-init();
-animate();
+function createScene() {
+    'use strict';
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+    scene.add(new THREE.AxesHelper(10));
+
+    createBaseGrua(0, 0, 0);
+    createTorreComPortaLancas(0,0,0);
+    createCabine(0,0,0);
+    createTirantesContraLanca(0,0,0);
+    createContraPeso(0,0,0);
+    // Câmeras ortográficas
+    const viewSize = 30;
+    const cameraFrontal = createOrthographicCamera(0, 0, 50, viewSize, 'Frontal');
+    const cameraLateral = createOrthographicCamera(-50, 0, 0, viewSize, 'Lateral');
+    const cameraTopo = createOrthographicCamera(0, 50, 0, viewSize, 'Topo');
+
+    scene.add(cameraFrontal);
+    scene.add(cameraLateral);
+    scene.add(cameraTopo);
+
+    // Câmeras com projeção perspectiva
+    const cameraPerspectiva = createPerspectiveCamera(0, 20, 20, 'Perspectiva');
+    const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
+    //Extra Camara, nao necessaria na enterega final
+    const cameraPerspectivaLateral = createPerspectiveCamera(10, 20, 3, 'PerspectivaLateral');
+
+    scene.add(cameraPerspectivaLateral)
+    scene.add(cameraPerspectiva);
+    scene.add(cameraMovel);
+}
+
+*/
