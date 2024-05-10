@@ -4,8 +4,22 @@ import * as THREE from 'three';
 let camera, scene, renderer;
 let vector_cargas = [[5,0,-5],[-5,0,5], [4,0,0],[-4,0,-4],[0,0,5]];
 let geometries = [THREE.BoxGeometry,THREE.DodecahedronGeometry,THREE.IcosahedronGeometry,THREE.TorusGeometry,THREE.TorusKnotGeometry];
+var G_Superior = new THREE.Object3D();
+var Cabo_Da_Garra =  new THREE.Object3D();
+var Garra = new THREE.Object3D();
+var Carrinho = new THREE.Object3D();
+var DenteGarra1 = new THREE.Object3D();
+var DenteGarra2 = new THREE.Object3D();
+var Base_Garra = new THREE.Object3D();
+var rot = 0;
+var rotacaoGarra = 0;
+var desce_cabo = 10.375;
+var move_carrinho = 0;
+var desce_garra_teste = 0;
+var altura_cabo = 2.25;
+var alturaGarra=0;
+var cont = 0;
 
-//let rotationAngle;
 
 function addBase(obj, x, y, z) {
     'use strict';
@@ -321,18 +335,19 @@ function createGarra_Sobe_Desce(obj){
 
 function createGarraArticulada(obj){   //Garra com 2 dentes?
     'use strict';
-    const GarraArticulada = new THREE.Object3D();
-    createCameraWithinGarra(GarraArticulada,0,8.125,5.5)
-    addGarraArticulada(GarraArticulada,0,8.125,5.5);
-    addDenteGarra(GarraArticulada,0,7.625,5.125);
-    addDenteGarra(GarraArticulada,0,7.625,5.875);
-    obj.add(GarraArticulada);
+    createCameraWithinGarra(Base_Garra,0,8.125,5.5)
+    addGarraArticulada(Base_Garra,0,8.125,5.5);
+    addDenteGarra(DenteGarra1,0,7.625,5.125);
+    addDenteGarra(DenteGarra2,0,7.625,5.875);
+    obj.add(Base_Garra);
+    obj.add(DenteGarra1);
+    obj.add(DenteGarra2);
 }
 
 function createGrua_Superior(obj, r){
     'use strict';
     var Grua_Superior = new THREE.Object3D();
-    Grua_Superior.rotation.set(0, r, 0)  //add value for rotation in rad (Math.PI)
+    Grua_Superior.rotation.set(0, r, 0);  //add value for rotation in rad (Math.PI)
     createCabine(Grua_Superior);
     createTirantesContraLanca(Grua_Superior);
     createContraPeso(Grua_Superior);
@@ -374,7 +389,7 @@ function createScene() {
     const cameraPerspectiva = createPerspectiveCamera(10, 20, 3,'Perspectiva');
     const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
     //Extra Camara, nao necessaria na enterega final
-    const cameraOrtograficaDinamica = createOrthographicCamera(-10, -20, -5,viewSize, 'OrtograficaDinamica');
+    const cameraOrtograficaDinamica = createOrthographicCamera(10, 20, 34,viewSize, 'OrtograficaDinamica');
 
     scene.add(cameraOrtograficaDinamica)
     scene.add(cameraPerspectiva);
@@ -448,7 +463,6 @@ document.addEventListener('keydown', (event) => {
         case 'W':
             if(Carrinho.position.z < 2){
                 move_carrinho = +0.05;
-                Carrinho.translateZ(move_carrinho);
             }
             break;
         case 's':
@@ -456,7 +470,6 @@ document.addEventListener('keydown', (event) => {
             
             if(Carrinho.position.z > -3.5){
                 move_carrinho = -0.05;
-                Carrinho.translateZ(move_carrinho);
             }
             break;
         case 'e':
@@ -490,12 +503,15 @@ document.addEventListener('keydown', (event) => {
             break;
         case 'r':
         case 'R':
-
+                rotationIncrement = 0.05
+                ;
+                alturaGarra += 0.01;
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         case 'f':
         case 'F':
-            //TODO: controlar angulo de abertura/fecho da garra
+                rotationIncrement -= 0.05;
+                alturaGarra -=0.01;
             break;
         default:
             break;
@@ -509,17 +525,17 @@ document.addEventListener('keydown', (event) => {
 
 function setActiveCamera(name) {
     'use strict';
-    scene.traverse((object) => {2
-        if (object.isCamera) {
-            object.layers.disable(1);
-        }
+    const cameras = scene.children.filter(object => object.isCamera);
+    cameras.forEach(camera => {
+        camera.layers.disable(1);
     });
     const activeCamera = scene.getObjectByName(name);
-    if (activeCamera) {
+    if (activeCamera && activeCamera.isCamera) {
         activeCamera.layers.enable(1);
         camera = activeCamera;
     }
 }
+
 
 function onResize() {
     'use strict';
@@ -531,30 +547,97 @@ function onResize() {
 
 function animate() {
     'use strict';
-    G_Superior.rotation.set(0, rot, 0);
+    update();
     render();
     requestAnimationFrame(animate);
 }
 
-var G_Superior = new THREE.Object3D();
-var Cabo_Da_Garra =  new THREE.Object3D();
-var Garra = new THREE.Object3D();
-var Carrinho = new THREE.Object3D();
-var rot = 0;
-var desce_garra = 0;
-var desce_cabo = 10.375;
-var move_carrinho = 0;
-var desce_garra_teste = 0;
-var altura_cabo = 2.25;
-var cont = 0;
+function update(){
+    updateSuperior();
+    //hasCollision();
+    if (rotationIncrement != 0){
+       updateDentesGarra(); 
+       rotationIncrement = 0;
+    }
+    //rotacaoGarra = 0;
+    Carrinho.translateZ(move_carrinho);
+    move_carrinho = 0;
 
-// Função para verificar colisões entre dois objetos
-function checkCollision(object1, object2) {
-    const box1 = new THREE.Sphere(1).setFromObject(object1);
-    const box2 = new THREE.Sphere(1).setFromObject(object2);
-    return box1.intersectsBox(box2);
+
 }
 
+function updateSuperior(){
+    G_Superior.rotation.set(0, rot, 0);
+}
+
+let rotationIncrement = 0.00;
+// Variável para controlar a direção da rotação e o ângulo total rotacionado
+let rotationDirectionDente1 = -1; 
+let rotationDirectionDente2 = 1;
+let totalRotation = 0; // Ângulo total rotacionado
+
+function updateDentesGarra() {
+    // Define os limites de rotação
+    const minRotation = 0; // Ângulo mínimo
+    const maxRotation = Math.PI / 8; // Ângulo máximo (45 graus)
+
+    // Atualiza o ângulo de rotação com base na direção
+    // Incremento de rotação
+    totalRotation += rotationDirectionDente1 * rotationIncrement;
+
+    // Verifica se ultrapassou os limites de rotação
+    if (totalRotation > maxRotation) {
+        totalRotation = maxRotation;
+    }
+    else if (totalRotation*(-1)>maxRotation){
+        totalRotation = minRotation;
+    }
+
+    // Aplica a rotação apenas se estiver dentro dos limites
+    
+    DenteGarra1.rotation.x = totalRotation;
+    DenteGarra2.rotation.x = -totalRotation;
+
+}
+
+
+
+
+
+function getGlobal(mesh){
+    const position = new THREE.Vector3();
+    mesh.getWorldPosition(position);
+    return position;
+}
+
+
+
+// Função para verificar colisões entre dois objetos
+function hasCollision() {
+    var position1 = [];
+    var radius1 = 0;
+    for(i=0; i< vector_cargas.length;i++){
+        position1[0] = vector_cargas[i][0];
+        position1[1] = vector_cargas[i][1];
+        position1[2] = vector_cargas[i][2];
+        radius1 = vector_cargas[i][3];
+    
+
+        if(radius1 + 0.25 >= distance(position1[0],position1[1],position1[2])){
+            return i;
+        }
+    }
+}
+
+function distance(x,y,z){
+    const GarraArticulada = Garra.getObjectByName('GarraArticulada');
+    const position = new THREE.Vector3();
+    position.setFromMatrixPosition(GarraArticulada.matrixWorld);
+
+    const dist = Math.sqrt((x - position.x) ** 2 + (y - position.y) ** 2 + (z - position.z) ** 2);
+    console.log("Houve Colisao");
+    return dist;
+}
 
 
 
