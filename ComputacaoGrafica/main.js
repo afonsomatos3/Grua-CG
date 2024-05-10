@@ -204,6 +204,23 @@ hudElement_14.style.backgroundColor = "rgba(0, 0, 0, 0)";
 /*  AUXILIARY BUILDING FUNCTIONS  */
 ////////////////////////////////////
 
+var G_Superior = new THREE.Object3D();
+var Cabo_Da_Garra =  new THREE.Object3D();
+var Garra = new THREE.Object3D();
+var Carrinho = new THREE.Object3D();
+var DenteGarra1 = new THREE.Object3D();
+var DenteGarra2 = new THREE.Object3D();
+var Base_Garra = new THREE.Object3D();
+var rot = 0;
+var rotacaoGarra = 0;
+var desce_cabo = 10.375;
+var move_carrinho = 0;
+var desce_garra_teste = 0;
+var altura_cabo = 2.25;
+var alturaGarra=0;
+var cont = 0;
+
+
 function addBase(obj, x, y, z) {
     'use strict';
     const geometry = new THREE.BoxGeometry(3, 1, 3);
@@ -544,18 +561,20 @@ function createGarra_Sobe_Desce(obj){
 
 function createGarraArticulada(obj){
     'use strict';
-    const GarraArticulada = new THREE.Object3D();
-    createCameraWithinGarra(GarraArticulada,0,8.125,5.5)
-    addGarraArticulada(GarraArticulada,0,8.125,5.5);
-    addDenteGarra(GarraArticulada,0,7.625,5.125);
-    addDenteGarra(GarraArticulada,0,7.625,5.875);
-    obj.add(GarraArticulada);
+    createCameraWithinGarra(Base_Garra,0,8.125,5.5)
+    addGarraArticulada(Base_Garra,0,8.125,5.5);
+    addDenteGarra(DenteGarra1,0,7.625,5.125);
+    addDenteGarra(DenteGarra2,0,7.625,5.875);
+    obj.add(Base_Garra);
+    obj.add(DenteGarra1);
+    obj.add(DenteGarra2);
 }
 
 function createGrua_Superior(obj, r){
     'use strict';
     var Grua_Superior = new THREE.Object3D();
     Grua_Superior.rotation.set(0, r, 0)  // rotation value is in radians
+    Grua_Superior.rotation.set(0, r, 0);  //add value for rotation in rad (Math.PI)
     createCabine(Grua_Superior);
     createTirantesContraLanca(Grua_Superior);
     createContraPeso(Grua_Superior);
@@ -597,7 +616,7 @@ function createScene() {
     const cameraPerspectiva = createPerspectiveCamera(10, 20, 3,'Perspectiva');
     const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
     //Extra Camara, nao necessaria na enterega final
-    const cameraOrtograficaDinamica = createOrthographicCamera(-10, -20, -5,viewSize, 'OrtograficaDinamica');
+    const cameraOrtograficaDinamica = createOrthographicCamera(10, 20, 34,viewSize, 'OrtograficaDinamica');
 
     scene.add(cameraOrtograficaDinamica)
     scene.add(cameraPerspectiva);
@@ -669,7 +688,6 @@ document.addEventListener('keydown', (event) => {
         case 'W':
             if(Carrinho.position.z < 2){
                 move_carrinho = +0.05;
-                Carrinho.translateZ(move_carrinho);
             }
             toggleBrightness_3(true);
             break;
@@ -677,7 +695,6 @@ document.addEventListener('keydown', (event) => {
         case 'S':
             if(Carrinho.position.z > -3.5){
                 move_carrinho = -0.05;
-                Carrinho.translateZ(move_carrinho);
             }
             toggleBrightness_4(true);
             break;
@@ -712,12 +729,17 @@ document.addEventListener('keydown', (event) => {
         case 'r':
         case 'R':
             toggleBrightness_7(true);
+                rotationIncrement = 0.05
+                ;
+                alturaGarra += 0.01;
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         case 'f':
         case 'F':
             toggleBrightness_8(true);
             //TODO: controlar angulo de abertura/fecho da garra
+                rotationIncrement -= 0.05;
+                alturaGarra -=0.01;
             break;
         default:
             break;
@@ -766,17 +788,17 @@ document.addEventListener('keyup', (event) => {
 
 function setActiveCamera(name) {
     'use strict';
-    scene.traverse((object) => {
-        if (object.isCamera) {
-            object.layers.disable(1);
-        }
+    const cameras = scene.children.filter(object => object.isCamera);
+    cameras.forEach(camera => {
+        camera.layers.disable(1);
     });
     const activeCamera = scene.getObjectByName(name);
-    if (activeCamera) {
+    if (activeCamera && activeCamera.isCamera) {
         activeCamera.layers.enable(1);
         camera = activeCamera;
     }
 }
+
 
 function onResize() {
     'use strict';
@@ -788,7 +810,7 @@ function onResize() {
 
 function animate() {
     'use strict';
-    G_Superior.rotation.set(0, rot, 0);
+    update();
     render();
     requestAnimationFrame(animate);
 }
@@ -796,68 +818,3 @@ function animate() {
 updateHUD(strings);
 init();
 animate();
-
-////// para apagar ///
-
-// var desce_garra = 0;
-/*
-
-// Função para verificar colisões entre dois objetos
-function checkCollision(object1, object2) {
-    const box1 = new THREE.Sphere(1).setFromObject(object1);
-    const box2 = new THREE.Sphere(1).setFromObject(object2);
-    return box1.intersectsBox(box2);
-}
-
-case '5':
-            setActiveCamera('Movel');
-            toggleBrightness_13();
-            break;
-
-
-function setActiveCamera(name) {
-    scene.traverse((object) => {
-        if (object.isCamera) {
-            object.layers.disable(1);
-        }
-    });
-    const activeCamera = scene.getObjectByName(name);
-    if (activeCamera) {
-        activeCamera.layers.enable(1);
-        camera = activeCamera;
-    }
-}
-
-function createScene() {
-    'use strict';
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
-    scene.add(new THREE.AxesHelper(10));
-
-    createBaseGrua(0, 0, 0);
-    createTorreComPortaLancas(0,0,0);
-    createCabine(0,0,0);
-    createTirantesContraLanca(0,0,0);
-    createContraPeso(0,0,0);
-    // Câmeras ortográficas
-    const viewSize = 30;
-    const cameraFrontal = createOrthographicCamera(0, 0, 50, viewSize, 'Frontal');
-    const cameraLateral = createOrthographicCamera(-50, 0, 0, viewSize, 'Lateral');
-    const cameraTopo = createOrthographicCamera(0, 50, 0, viewSize, 'Topo');
-
-    scene.add(cameraFrontal);
-    scene.add(cameraLateral);
-    scene.add(cameraTopo);
-
-    // Câmeras com projeção perspectiva
-    const cameraPerspectiva = createPerspectiveCamera(0, 20, 20, 'Perspectiva');
-    const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
-    //Extra Camara, nao necessaria na enterega final
-    const cameraPerspectivaLateral = createPerspectiveCamera(10, 20, 3, 'PerspectivaLateral');
-
-    scene.add(cameraPerspectivaLateral)
-    scene.add(cameraPerspectiva);
-    scene.add(cameraMovel);
-}
-
-*/
