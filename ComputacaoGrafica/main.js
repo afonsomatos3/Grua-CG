@@ -2,6 +2,9 @@ import * as THREE from 'three';
 
 
 let camera, scene, renderer;
+let vector_cargas = [[5,0,-5],[-5,0,5], [4,0,0],[-4,0,-4],[0,0,5]];
+let geometries = [THREE.BoxGeometry,THREE.DodecahedronGeometry,THREE.IcosahedronGeometry,THREE.TorusGeometry,THREE.TorusKnotGeometry];
+
 //let rotationAngle;
 
 function addBase(obj, x, y, z) {
@@ -40,14 +43,41 @@ function addLadosContentores_frente_tras(obj, x, y, z) {
     obj.add(mesh); 
 }
 
-function addCarga(obj, x, y, z) {
+function addCarga(obj, position_number) {
     'use strict';
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
+    const randomIndex = Math.floor(Math.random() * geometries.length);
+    const selectedGeometry = geometries[randomIndex];
+    const dimension = THREE.MathUtils.randInt(1, 2);
+    let geometry;
+
+    switch (selectedGeometry) {
+        case THREE.BoxGeometry:
+            geometry = new THREE.BoxGeometry(dimension, dimension, dimension);
+            break;
+        case THREE.DodecahedronGeometry:
+            geometry = new THREE.DodecahedronGeometry(dimension);
+            break;
+        case THREE.IcosahedronGeometry:
+            geometry = new THREE.IcosahedronGeometry(dimension);
+            break;
+        case THREE.TorusGeometry:
+            geometry = new THREE.TorusGeometry(dimension / 2, dimension / 4, 16, 100);
+            break;
+        case THREE.TorusKnotGeometry:
+            geometry = new THREE.TorusKnotGeometry(dimension / 2, dimension / 4, 100, 16);
+            break;
+        default:
+            console.error('Tipo de geometria não suportado');
+            return;
+    }
+
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true });
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
+    mesh.position.set(vector_cargas[position_number][0], vector_cargas[position_number][1]+dimension, vector_cargas[position_number][2]);
+    vector_cargas[position_number][3] = dimension;
+    obj.add(mesh);
 }
+
     
 
 function addLanca(obj, x, y, z){
@@ -209,7 +239,6 @@ function createBaseGrua() {
 
 function createContenedor_e_Carga(x, y, z) {
     const ContenedorDeCarga = new THREE.Object3D();
-    const Carga = new THREE.Object3D();
     let xPos = THREE.MathUtils.randFloat(6, 5);  //random x position
     let zPos = THREE.MathUtils.randFloat(6, 5);  //random z position
     addBaseContentor(ContenedorDeCarga, xPos, 0, zPos); 
@@ -217,19 +246,27 @@ function createContenedor_e_Carga(x, y, z) {
     addLadosContentores_dir_esq(ContenedorDeCarga, xPos-2, 0.5, zPos);   //esquerdo 
     addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos+2);   //frente 
     addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos-2);   //tras 
-    addCarga (Carga, x+xPos, y+1, z+zPos); //pode mexer
     scene.add(ContenedorDeCarga);
-    scene.add(Carga);
 }
 
-//  function createCargas(x, y, z) {
-//     'use strict';
-//     const Carga = new THREE.Object3D();
-//     let xPos = THREE.MathUtils.randFloat(6, 5);  //random x position
-//     let zPos = THREE.MathUtils.randFloat(6, 5);  //random z position
-//     addCarga (Carga, x+xPos, y+1, z+zPos); //pode mexer
-//     scene.add(Carga);
-//     }
+function createCargas() {
+    'use strict';
+    const Carga0 = new THREE.Object3D();
+    const Carga1 = new THREE.Object3D();
+    const Carga2 = new THREE.Object3D();
+    const Carga3 = new THREE.Object3D();
+    const Carga4 = new THREE.Object3D();
+    addCarga (Carga0,0); //pode mexer
+    scene.add(Carga0);
+    addCarga (Carga1,1); //pode mexer
+    scene.add(Carga1);
+    addCarga (Carga2,2); //pode mexer
+    scene.add(Carga2);
+    addCarga (Carga3,3); //pode mexer
+    scene.add(Carga3);
+    addCarga (Carga4,4); //pode mexer
+    scene.add(Carga4);
+}
 
 //Braço vertical
 function createTorreComPortaLancas(){
@@ -268,8 +305,6 @@ function createCabine(obj){
 
 function createCarrinho_E_Garra(obj){
     'use strict';
-    const Carrinhotranslacao = new THREE.Object3D();
-    //Carrinhotranslacao.translateZ(t);                   // add here the value for the carrinho translation
     addCarrinhoTranslacao(Carrinho,0,10.375,5.5);
     createGarra_Sobe_Desce(Carrinho);
     obj.add(Carrinho);
@@ -310,16 +345,17 @@ function createScene() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     scene.add(new THREE.AxesHelper(10));
-    
     //Cria Base da Grua
     createBaseGrua();
     //Cria Contentor e Carga
     createContenedor_e_Carga(0,0,0); 
     //Cria Torre com Porta Lanças
     createTorreComPortaLancas();
+    createCargas();
     //Cria a Parte superior da grua
     createGrua_Superior(G_Superior, rot);  //add rot (rotation)
     scene.add(G_Superior);
+
 
 
 
@@ -425,23 +461,31 @@ document.addEventListener('keydown', (event) => {
             break;
         case 'e':
         case 'E':
-            Cabo_Da_Garra.scale.y += 0.1;
-            cont+=1;
-            Cabo_Da_Garra.position.y -= 0.1* desce_cabo;
-            desce_garra_teste = (1 + cont*0.1)*2.25;
-            altura_cabo = 2.25-desce_garra_teste;
-            Garra.position.y = altura_cabo;
+            if (Garra.position.y > -7.125){
+                Cabo_Da_Garra.scale.y += 0.1;
+                Cabo_Da_Garra.position.y -= 0.1* desce_cabo; //aumentar baixar o cabo
+            
+                cont+=1;
+                desce_garra_teste = (1 + cont*0.1)*2.25;
+                altura_cabo = 2.25-desce_garra_teste;
+                Garra.position.y = altura_cabo;             //baixar garra
+            }
+            
 
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'd':
         case 'D':
-            Cabo_Da_Garra.scale.y -= 0.1;
-            cont-=1;
-            Cabo_Da_Garra.position.y += 0.1* desce_cabo;
-            desce_garra_teste = (1 + cont*0.1)*2.25;
-            altura_cabo = 2.25-desce_garra_teste;
-            Garra.position.y = altura_cabo;
+            if (Garra.position.y < 1.5){
+                Cabo_Da_Garra.scale.y -= 0.1;
+                Cabo_Da_Garra.position.y += 0.1* desce_cabo;   //diminuir e subir cabo
+
+                cont-=1;
+                desce_garra_teste = (1 + cont*0.1)*2.25;
+                altura_cabo = 2.25-desce_garra_teste;
+                Garra.position.y = altura_cabo;          //baixar garra
+            }
+            
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'r':
@@ -503,6 +547,15 @@ var move_carrinho = 0;
 var desce_garra_teste = 0;
 var altura_cabo = 2.25;
 var cont = 0;
+
+// Função para verificar colisões entre dois objetos
+function checkCollision(object1, object2) {
+    const box1 = new THREE.Sphere(1).setFromObject(object1);
+    const box2 = new THREE.Sphere(1).setFromObject(object2);
+    return box1.intersectsBox(box2);
+}
+
+
 
 
 init();
