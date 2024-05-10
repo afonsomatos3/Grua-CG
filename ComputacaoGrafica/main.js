@@ -14,6 +14,26 @@ var strings = ["Q/q - Rodar Contra-Lança", "A/a - Rodar Contra-Lança", "W/w - 
                 "F/f - Fechar Garra", "1 - Vista Frontal", "2 - Vista Lateral", "3 - Vista de Topo", 
                 "4 - Ortogonal Fixa", "5 - Perspetiva Fixa", "6 - Perspetiva Móvel", "7 - Alternar Wireframe"];
 
+class Manager {
+
+    constructor() {
+        this.materialsVector = [];
+    }
+
+    addToVector(material) {
+        this.materialsVector.push(material);
+    }
+
+    toggleWireframe() {
+        this.materialsVector.forEach(material => {
+            material.wireframe = !material.wireframe;
+        });
+    }
+
+}
+
+let manager = new Manager();
+
 //////////////////
 /*     HUD      */
 //////////////////
@@ -179,6 +199,8 @@ function addBase(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addLanca(obj, x, y, z){
@@ -188,6 +210,8 @@ function addLanca(obj, x, y, z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+11 , z+2.5);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addCabine(obj,x,y,z){
@@ -197,6 +221,8 @@ function addCabine(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x-1, y+10 , z);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addCabosDeAço(x,y,z){
@@ -234,6 +260,8 @@ function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     mesh.rotateOnAxis(axis, angle);
 
     obj.add(mesh);
+
+    manager.addToVector(material);
 }
 
 function addContraPeso(obj,x,y,z){
@@ -243,6 +271,8 @@ function addContraPeso(obj,x,y,z){
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y+10.25 , z-2);
     obj.add(mesh); 
+
+    manager.addToVector(material);
 }
 
 function addPortaLanca(obj, x, y, z) {
@@ -252,6 +282,8 @@ function addPortaLanca(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y + 13, z);
     obj.add(mesh);
+
+    manager.addToVector(material);
 }
 
 function addTorreMetalica(obj, x, y, z) {
@@ -261,6 +293,8 @@ function addTorreMetalica(obj, x, y, z) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y + 6, z);
     obj.add(mesh);
+
+    manager.addToVector(material);
 }
 
 function createOrthographicCamera(x, y, z, viewSize, name) {
@@ -411,6 +445,7 @@ document.addEventListener('keydown', (event) => {
             //TODO: Implementar lógica para alternar para a câmera móvel
             break;
         case '7':
+            manager.toggleWireframe();
             toggleBrightness_15();
             //TODO: alternar entre grid e opaco ( objetos )
             break;
