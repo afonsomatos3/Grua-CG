@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 
 let camera, scene, renderer;
+//let rotationAngle;
 
 function addBase(obj, x, y, z) {
     'use strict';
@@ -153,6 +154,7 @@ function addTorreMetalica(obj, x, y, z) {
 }
 
 function createOrthographicCamera(x, y, z, viewSize, name) {
+    'use strict';
     const aspectRatio = window.innerWidth / window.innerHeight;
     const camera = new THREE.OrthographicCamera(
         -aspectRatio * viewSize / 2,
@@ -169,6 +171,7 @@ function createOrthographicCamera(x, y, z, viewSize, name) {
 }
 
 function createPerspectiveCamera(x, y, z, name) {
+    'use strict';
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(x, y, z);
     camera.lookAt(scene.position);
@@ -177,6 +180,7 @@ function createPerspectiveCamera(x, y, z, name) {
 }
 
 function createCameraWithinGarra(obj,x,y,z) {
+    'use strict';
     // Criar a câmera ortográfica
     const camera = new THREE.OrthographicCamera(
         -5, // left
@@ -197,28 +201,39 @@ function createCameraWithinGarra(obj,x,y,z) {
 }
 
 function createBaseGrua() {
+    'use strict';
     const gruaBase = new THREE.Object3D();
     addBase(gruaBase, 0, 0, 0);
     scene.add(gruaBase);
 }
 
- function createContenedor_e_Carga(x, y, z) {
-     const ContenedorDeCarga = new THREE.Object3D();
-     const Carga = new THREE.Object3D();
-     let xPos = THREE.MathUtils.randFloat(6, 5);  //random x position
-     let zPos = THREE.MathUtils.randFloat(6, 5);  //random z position
-     addBaseContentor(ContenedorDeCarga, xPos, 0, zPos); //Não deve mexer, estatico
-     addLadosContentores_dir_esq(ContenedorDeCarga, xPos+2, 0.5, zPos);   //direito. Não deve mexer, estatico (remover x+1 ...)
-     addLadosContentores_dir_esq(ContenedorDeCarga, xPos-2, 0.5, zPos);   //esquerdo Não deve mexer, estatico
-     addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos+2);   //frente Não deve mexer, estatico
-     addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos-2);   //tras Não deve mexer, estatico
-     addCarga (Carga, x+xPos, y+1, z+zPos); //pode mexer
-     scene.add(ContenedorDeCarga);
-     scene.add(Carga);
- }
+function createContenedor_e_Carga(x, y, z) {
+    const ContenedorDeCarga = new THREE.Object3D();
+    const Carga = new THREE.Object3D();
+    let xPos = THREE.MathUtils.randFloat(6, 5);  //random x position
+    let zPos = THREE.MathUtils.randFloat(6, 5);  //random z position
+    addBaseContentor(ContenedorDeCarga, xPos, 0, zPos); 
+    addLadosContentores_dir_esq(ContenedorDeCarga, xPos+2, 0.5, zPos);   //direito.
+    addLadosContentores_dir_esq(ContenedorDeCarga, xPos-2, 0.5, zPos);   //esquerdo 
+    addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos+2);   //frente 
+    addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos-2);   //tras 
+    addCarga (Carga, x+xPos, y+1, z+zPos); //pode mexer
+    scene.add(ContenedorDeCarga);
+    scene.add(Carga);
+}
+
+//  function createCargas(x, y, z) {
+//     'use strict';
+//     const Carga = new THREE.Object3D();
+//     let xPos = THREE.MathUtils.randFloat(6, 5);  //random x position
+//     let zPos = THREE.MathUtils.randFloat(6, 5);  //random z position
+//     addCarga (Carga, x+xPos, y+1, z+zPos); //pode mexer
+//     scene.add(Carga);
+//     }
 
 //Braço vertical
 function createTorreComPortaLancas(){
+    'use strict';
     const TorreComPortaLancas = new THREE.Object3D();
     addTorreMetalica(TorreComPortaLancas,0,0,0);
     addPortaLanca(TorreComPortaLancas,0,0,0);
@@ -226,13 +241,15 @@ function createTorreComPortaLancas(){
 }
 
 function createContraPeso(obj){
+    'use strict';
     const ContraPeso = new THREE.Object3D();
     addContraPeso(ContraPeso,0,0,0);
     obj.add(ContraPeso);
 }
 
-//Braço horizontal
+//Braco horizontal
 function createTirantesContraLanca(obj){
+    'use strict';
     const Lanca = new THREE.Object3D();
 
     addLanca(Lanca,0,0,0);
@@ -243,45 +260,49 @@ function createTirantesContraLanca(obj){
 }
 
 function createCabine(obj){
+    'use strict';
     const Cabine = new THREE.Object3D();
     addCabine(Cabine,-1,10,0);
     obj.add(Cabine);
 }
 
 function createCarrinho_E_Garra(obj){
+    'use strict';
     const Carrinhotranslacao = new THREE.Object3D();
-    Carrinhotranslacao.translateZ(0);                   // add here the value for the carrinho translation
-    addCarrinhoTranslacao(Carrinhotranslacao,0,10.375,5.5);
-    createGarra_Sobe_Desce(Carrinhotranslacao);
-    obj.add(Carrinhotranslacao);
+    //Carrinhotranslacao.translateZ(t);                   // add here the value for the carrinho translation
+    addCarrinhoTranslacao(Carrinho,0,10.375,5.5);
+    createGarra_Sobe_Desce(Carrinho);
+    obj.add(Carrinho);
 
 }
 
 function createGarra_Sobe_Desce(obj){
-    const Cabo_e_garra = new THREE.Object3D();
-    const t = 0; //       add value for claw translation
-    addCaboTirante(Cabo_e_garra,0,8.125-t,5.5,0,10.375,5.5);
-    createGarraArticulada(Cabo_e_garra,t);
-    obj.add(Cabo_e_garra);
+    'use strict';
+    addCaboTirante(Cabo_Da_Garra,0,8.125,5.5,0,10.375,5.5);
+    createGarraArticulada(Garra);
+    obj.add(Garra);
+    obj.add(Cabo_Da_Garra);
 }
 
-function createGarraArticulada(obj,t){   //Garra com 4 dentes?
+function createGarraArticulada(obj){   //Garra com 2 dentes?
+    'use strict';
     const GarraArticulada = new THREE.Object3D();
-    createCameraWithinGarra(GarraArticulada,0,8.125-t,5.5)
-    addGarraArticulada(GarraArticulada,0,8.125-t,5.5);
-    addDenteGarra(GarraArticulada,0,7.625-t,5.125);
-    addDenteGarra(GarraArticulada,0,7.625-t,5.875);
+    createCameraWithinGarra(GarraArticulada,0,8.125,5.5)
+    addGarraArticulada(GarraArticulada,0,8.125,5.5);
+    addDenteGarra(GarraArticulada,0,7.625,5.125);
+    addDenteGarra(GarraArticulada,0,7.625,5.875);
     obj.add(GarraArticulada);
 }
 
-function createGrua_Superior(r){
+function createGrua_Superior(obj, r){
+    'use strict';
     var Grua_Superior = new THREE.Object3D();
     Grua_Superior.rotation.set(0, r, 0)  //add value for rotation in rad (Math.PI)
     createCabine(Grua_Superior);
     createTirantesContraLanca(Grua_Superior);
     createContraPeso(Grua_Superior);
     createCarrinho_E_Garra(Grua_Superior);   //add translation for garra
-    scene.add(Grua_Superior); 
+    obj.add(Grua_Superior); 
 }
 
 function createScene() {
@@ -289,20 +310,19 @@ function createScene() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     scene.add(new THREE.AxesHelper(10));
-    //Create Topo 
-    //Create Carrinho+Garra 
-    //Create Base da Grua
-    var Grua_Superior = new THREE.Object3D();
+    
     //Cria Base da Grua
     createBaseGrua();
-    createContenedor_e_Carga(0,0,0);
+    //Cria Contentor e Carga
+    createContenedor_e_Carga(0,0,0); 
+    //Cria Torre com Porta Lanças
     createTorreComPortaLancas();
     //Cria a Parte superior da grua
-    createGrua_Superior(0);  //add r (rotation)
-    
-    scene.add(Grua_Superior);
-    //scene.add(Carrinho_E_Garra);
-    //scene.add(Movimento_Garra);
+    createGrua_Superior(G_Superior, rot);  //add rot (rotation)
+    scene.add(G_Superior);
+
+
+
     // Câmeras ortográficas
     const viewSize = 30;
     const cameraFrontal = createOrthographicCamera(0, 0, 50, viewSize, 'Frontal');
@@ -312,7 +332,7 @@ function createScene() {
 
     scene.add(cameraFrontal);
     scene.add(cameraLateral);
-    scene.add(cameraTopo);
+    scene.add(cameraTopo);  
 
     // Câmeras com projeção perspectiva
     const cameraPerspectiva = createPerspectiveCamera(10, 20, 3,'Perspectiva');
@@ -337,19 +357,21 @@ function init() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-
+    
     createScene();
 
     setActiveCamera('Frontal');
-
-    render();
+    scene.r
+    //render();
+    
+    window.addEventListener('resize', onResize);
 }
 
 document.addEventListener('keydown', (event) => {
+    
     switch (event.key) {
         case '1':
             setActiveCamera('Frontal');
-            //TODO: alternar entre grid e opaco ( objetos )
             break;
         case '2':
             setActiveCamera('Lateral');
@@ -366,34 +388,65 @@ document.addEventListener('keydown', (event) => {
             break;
         case '6':
             setActiveCamera('Garra')
-            //TODO: Implementar lógica para alternar para a câmera móvel
+            break;
+        case '7':
+            scene.traverse(function(obj) {
+                // check if its a instance of a 3D object
+                if (obj instanceof THREE.Mesh) {
+                    obj.material.wireframe = !obj.material.wireframe;
+                }
+            });    
             break;
         case 'q':
+
         case 'Q':
-            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            
+            rot+= 0.06;
             break;
+
         case 'a':
         case 'A':
-            //TODO: roda eixo de rotacao da seccao superior incluindo cabine
+            rot -= 0.06;
             break;
         case 'w':
         case 'W':
-            //TODO: controlar deslocamento que translada o carrinho de translacao
+            if(Carrinho.position.z < 2){
+                move_carrinho = +0.05;
+                Carrinho.translateZ(move_carrinho);
+            }
             break;
         case 's':
         case 'S':
-            //TODO: controlar deslocamento que translada o carrinho de translacao
+            
+            if(Carrinho.position.z > -3.5){
+                move_carrinho = -0.05;
+                Carrinho.translateZ(move_carrinho);
+            }
             break;
         case 'e':
         case 'E':
+            Cabo_Da_Garra.scale.y += 0.1;
+            cont+=1;
+            Cabo_Da_Garra.position.y -= 0.1* desce_cabo;
+            desce_garra_teste = (1 + cont*0.1)*2.25;
+            altura_cabo = 2.25-desce_garra_teste;
+            Garra.position.y = altura_cabo;
+
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'd':
         case 'D':
+            Cabo_Da_Garra.scale.y -= 0.1;
+            cont-=1;
+            Cabo_Da_Garra.position.y += 0.1* desce_cabo;
+            desce_garra_teste = (1 + cont*0.1)*2.25;
+            altura_cabo = 2.25-desce_garra_teste;
+            Garra.position.y = altura_cabo;
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'r':
         case 'R':
+
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         case 'f':
@@ -411,6 +464,7 @@ document.addEventListener('keydown', (event) => {
 
 
 function setActiveCamera(name) {
+    'use strict';
     scene.traverse((object) => {2
         if (object.isCamera) {
             object.layers.disable(1);
@@ -423,4 +477,33 @@ function setActiveCamera(name) {
     }
 }
 
+function onResize() {
+    'use strict';
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    camera.aspect = aspectRatio;
+    camera.updateProjectionMatrix();
+}
+
+function animate() {
+    'use strict';
+    G_Superior.rotation.set(0, rot, 0);
+    render();
+    requestAnimationFrame(animate);
+}
+
+var G_Superior = new THREE.Object3D();
+var Cabo_Da_Garra =  new THREE.Object3D();
+var Garra = new THREE.Object3D();
+var Carrinho = new THREE.Object3D();
+var rot = 0;
+var desce_garra = 0;
+var desce_cabo = 10.375;
+var move_carrinho = 0;
+var desce_garra_teste = 0;
+var altura_cabo = 2.25;
+var cont = 0;
+
+
 init();
+animate();
