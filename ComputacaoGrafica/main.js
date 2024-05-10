@@ -7,15 +7,7 @@ import * as THREE from 'three';
 
 let camera, scene, renderer;
 
-var isBright_1 = false; // q
-var isBright_2 = false; // a
-var isBright_3 = false; // w
-var isBright_4 = false; // s
-var isBright_5 = false; // e
-var isBright_6 = false; // d
-var isBright_7 = false; // r
-var isBright_8 = false; // f
-var isBright_15 = false; // 7
+var isBright_15 = false; // toggle variable for key '7'
 
 var strings = ["Q/q - Rodar Contra-Lança", "A/a - Rodar Contra-Lança", "W/w - Transladar Carrinho",
                 "S/s - Transladar carrinho", "E/e - Subir Garra", "D/d - Descer Garra", "R/r - Abrir Garra",
@@ -38,92 +30,76 @@ function updateHUD(strings) {
 }
 
 // Functions that modify brightness of each HUD element
-function toggleBrightness_1() {
-var hudElement = document.getElementById("string1");
-if (isBright_1) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_1 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_1 = true;
-}
+function toggleBrightness_1(pressed) {
+    var hudElement = document.getElementById("string1");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_2() {
-var hudElement = document.getElementById("string2");
-if (isBright_2) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_2 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_2 = true;
-}
+function toggleBrightness_2(pressed) {
+    var hudElement = document.getElementById("string2");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_3() {
-var hudElement = document.getElementById("string3");
-if (isBright_3) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_3 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_3 = true;
-}
+function toggleBrightness_3(pressed) {
+    var hudElement = document.getElementById("string3");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_4() {
-var hudElement = document.getElementById("string4");
-if (isBright_4) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_4 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_4 = true;
-}
+function toggleBrightness_4(pressed) {
+    var hudElement = document.getElementById("string4");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_5() {
-var hudElement = document.getElementById("string5");
-if (isBright_5) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_5 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_5 = true;
-}
+function toggleBrightness_5(pressed) {
+    var hudElement = document.getElementById("string5");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_6() {
-var hudElement = document.getElementById("string6");
-if (isBright_6) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_6 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_6 = true;
-}
+function toggleBrightness_6(pressed) {
+    var hudElement = document.getElementById("string6");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_7() {
-var hudElement = document.getElementById("string7");
-if (isBright_7) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_7 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_7 = true;
-}
+function toggleBrightness_7(pressed) {
+    var hudElement = document.getElementById("string7");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
-function toggleBrightness_8() {
-var hudElement = document.getElementById("string8");
-if (isBright_8) {
-    hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    isBright_8 = false;
-} else {
-    hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
-    isBright_8 = true;
-}
+function toggleBrightness_8(pressed) {
+    var hudElement = document.getElementById("string8");
+    if (!pressed) {
+        hudElement.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    } else {
+        hudElement.style.backgroundColor = "rgba(5, 5, 255, 0.5)";
+    }
 }
 
 function toggleBrightness_9() {
@@ -440,42 +416,42 @@ document.addEventListener('keydown', (event) => {
             break;
         case 'q':
         case 'Q':
-            toggleBrightness_1();
+            toggleBrightness_1(true);
             //TODO: roda eixo de rotacao da seccao superior incluindo cabine
             break;
         case 'a':
         case 'A':
-            toggleBrightness_2();
+            toggleBrightness_2(true);
             //TODO: roda eixo de rotacao da seccao superior incluindo cabine
             break;
         case 'w':
         case 'W':
-            toggleBrightness_3();
+            toggleBrightness_3(true);
             //TODO: controlar deslocamento que translada o carrinho de translacao
             break;
         case 's':
         case 'S':
-            toggleBrightness_4();
+            toggleBrightness_4(true);
             //TODO: controlar deslocamento que translada o carrinho de translacao
             break;
         case 'e':
         case 'E':
-            toggleBrightness_5();
+            toggleBrightness_5(true);
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'd':
         case 'D':
-            toggleBrightness_6();
+            toggleBrightness_6(true);
             //TODO: controlar deslocamento que translada a seccao composta pelo bloco do gancho e a garra, subir/descer
             break;
         case 'r':
         case 'R':
-            toggleBrightness_7();
+            toggleBrightness_7(true);
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         case 'f':
         case 'F':
-            toggleBrightness_8();
+            toggleBrightness_8(true);
             //TODO: controlar angulo de abertura/fecho da garra
             break;
         default:
@@ -491,35 +467,35 @@ document.addEventListener('keyup', (event) => {
     switch (event.key) {
         case 'q':
         case 'Q':
-            toggleBrightness_1();
+            toggleBrightness_1(false);
             break;
         case 'a':
         case 'A':
-            toggleBrightness_2();
+            toggleBrightness_2(false);
             break;
         case 'w':
         case 'W':
-            toggleBrightness_3();
+            toggleBrightness_3(false);
             break;
         case 's':
         case 'S':
-            toggleBrightness_4();
+            toggleBrightness_4(false);
             break;
         case 'e':
         case 'E':
-            toggleBrightness_5();
+            toggleBrightness_5(false);
             break;
         case 'd':
         case 'D':
-            toggleBrightness_6();
+            toggleBrightness_6(false);
             break;
         case 'r':
         case 'R':
-            toggleBrightness_7();
+            toggleBrightness_7(false);
             break;
         case 'f':
         case 'F':
-            toggleBrightness_8();
+            toggleBrightness_8(false);
             break;
         default:
             break;
