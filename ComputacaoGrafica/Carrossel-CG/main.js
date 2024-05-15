@@ -1,15 +1,19 @@
 import * as THREE from 'three';
+import { initSplineTexture } from 'three/examples/jsm/Addons.js';
 
 ////////////////////////
 /*  GLOBAL VARIABLES  */
 ////////////////////////
 
-let camera, scene, renderer;
+let camera;
+let scene = new THREE.Scene();
+let renderer;
+
+
+/* Variables for computing objects' movement
 var rot_cont = 0;
 var cont = 0;
 var rot_direction = 0;
-
-// Variables for computing objects' movement
 var G_Superior = new THREE.Object3D();
 var Cabo_Da_Garra =  new THREE.Object3D();
 var Garra = new THREE.Object3D();
@@ -24,6 +28,7 @@ var DenteGarra1 = new THREE.Object3D();
 var DenteGarra2 = new THREE.Object3D();
 var Base_Garra = new THREE.Object3D();
 var alturaGarra=0;
+*/
 
 class Manager {
 
@@ -43,7 +48,90 @@ class Manager {
 
 }
 
+const Colors = {
+    RED: 0xFF0000,
+    GREEN: 0x00ff00,
+    BLUE: 0x0000FF,
+    PURPLE: 0x800080,
+  };
+
 let manager = new Manager();
+
+
+function addRings() {
+
+    // Outer Radiuses: big ring = 5, small = 2, width = 3
+    let initialOuterRadius = 5; // valor inical para o diametro do menor ring
+    let initialYCoordinate = 0;
+
+    let ringWidth = 3; // igual para todos
+    let yCoordinateinterval = 1;
+
+    let previousYCoordinate = initialYCoordinate + yCoordinateinterval;
+    let previousOuterRing = initialOuterRadius - ringWidth;
+
+    let numberOfRings = 3;
+
+    const extrudeSettings = {
+        steps:   1,   
+        depth:  yCoordinateinterval,  
+        bevelEnabled: false, 
+        curveSegments: 28,  // number of discrete segments describing the curve aka how smooth it is 
+    };
+
+    let ringColors = [Colors.BLUE, Colors.GREEN, Colors.RED]; 
+
+    for ( let i = 0; i < numberOfRings ; i++) {
+        
+        const shape = new THREE.Shape();
+        shape.absarc(0, 0, previousOuterRing + ringWidth, 0, Math.PI * 2, false);
+        
+        const innerCircle = new THREE.Path();
+        innerCircle.absarc(0, 0, previousOuterRing, 0, Math.PI * 2, true);
+        
+        shape.holes.push(innerCircle);
+        
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        const material = new THREE.MeshBasicMaterial({ color: ringColors[i], side: THREE.DoubleSide });
+        const mesh = new THREE.Mesh(geometry, material);
+
+        mesh.rotation.set( Math.PI / 2, 0, 0);
+        mesh.position.set(0, previousYCoordinate - yCoordinateinterval, 0);
+        scene.add(mesh);
+
+        //update variable values for the next ring
+        previousOuterRing += ringWidth;
+        previousYCoordinate -= yCoordinateinterval;
+
+    }
+
+}
+
+function addCilinder() {
+
+    let height = 10;
+    let radius = 2;
+    let color = Colors.PURPLE;
+
+    const extrudeSettings = {
+        steps:   1,   
+        depth:  height,  
+        bevelEnabled: false, 
+        curveSegments: 28,  // number of discrete segments describing the curve aka how smooth it is 
+    };
+
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+    
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    mesh.rotation.set( Math.PI / 2, 0, 0);
+    mesh.position.set(0, height - 3, 0);
+    scene.add(mesh);
+
+}
 
 //////////////////
 /*     HUD      */
@@ -119,64 +207,28 @@ hudElement_14.style.backgroundColor = "rgba(0, 0, 0, 0)";
 /*  AUXILIARY BUILDING FUNCTIONS  */
 ////////////////////////////////////
 
+// parametricas sao THREE.ParametricGeometry devem consistir em 8 formas diferentes, incluindo superfícies regradas (e.g.,
+//hiperbolóide de 1 folha). Colocar múltiplas instâncias destas 8 superfícies sobre os restantes
+//anéis, tendo cada instância dimensões e orientações distintas.
+
+/*
+MeshLambertMaterial, MeshPhongMaterial,
+MeshToonMaterial, MeshNormalMaterial
+aneis, pararmetrticas, faixa de mobius, cilindro sao os 4 objetos??
+*/
+
+// Devem recorrer às geometrias THREE.RingGeometry -> Clickbait, THREE.TubeGeometry ou
+// THREE.ExtrudeGeometry.
+
+// usar o THREE.Clock()
+
+//extrude geometry ( tem q ter uma shape )-> aneis
+
+/*
+
 function addBase(obj, x, y, z) {
     'use strict';
     const geometry = new THREE.BoxGeometry(3, 1, 3);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addBaseContentor(obj, x, y, z) {
-    'use strict';
-    const geometry = new THREE.BoxGeometry(3, 1, 3);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addLadosContentores_dir_esq(obj, x, y, z) {
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 2, 5);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addLadosContentores_frente_tras(obj, x, y, z) {
-    'use strict';
-    const geometry = new THREE.BoxGeometry(5, 2, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addLanca(obj, x, y, z){
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 1, 11);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y+11 , z+2.5);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addCabine(obj,x,y,z){
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 2, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y , z);
@@ -218,61 +270,6 @@ function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     manager.addToVector(material);
 }
 
-function addCarrinhoTranslacao(obj,x,y,z){
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 0.25, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh);
-    
-    manager.addToVector(material);
-}
-
-function addContraPeso(obj,x,y,z){
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 0.5, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y+10.25 , z-2);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addDenteGarra(obj,x,y,z){
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 0.5, 0.2);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
-
-function addGarraArticulada(obj,x,y,z){
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 0.5, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh);
-
-    manager.addToVector(material);
-}
-
-function addPortaLanca(obj, x, y, z) {
-    'use strict';
-    const geometry = new THREE.ConeGeometry(0.5, 3, 4); // 0.5 é o raio da base
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y + 13, z);
-    obj.add(mesh);
-
-    manager.addToVector(material);
-}
-
 function addTorreMetalica(obj, x, y, z) {
     'use strict';
     const geometry = new THREE.BoxGeometry(1, 11, 1);
@@ -282,32 +279,6 @@ function addTorreMetalica(obj, x, y, z) {
     obj.add(mesh);
 
     manager.addToVector(material);
-}
-
-function createOrthographicCamera(x, y, z, viewSize, name) {
-    'use strict';
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    const camera = new THREE.OrthographicCamera(
-        -aspectRatio * viewSize / 2,
-        aspectRatio * viewSize / 2,
-        viewSize / 2,
-        -viewSize / 2,
-        1,
-        1000
-    );
-    camera.position.set(x, y, z);
-    camera.lookAt(scene.position);
-    camera.name = name;
-    return camera;
-}
-
-function createPerspectiveCamera(x, y, z, name) {
-    'use strict';
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(x, y, z);
-    camera.lookAt(scene.position);
-    camera.name = name;
-    return camera;
 }
 
 function createCameraWithinGarra(obj,x,y,z) {
@@ -424,20 +395,45 @@ function createGrua_Superior(obj, r){
     obj.add(Grua_Superior); 
 }
 
+*/
+
+function createOrthographicCamera(x, y, z, viewSize, name) {
+    'use strict';
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    const camera = new THREE.OrthographicCamera(
+        -aspectRatio * viewSize / 2,
+        aspectRatio * viewSize / 2,
+        viewSize / 2,
+        -viewSize / 2,
+        1,
+        1000
+    );
+    camera.position.set(x, y, z);
+    camera.lookAt(scene.position);
+    camera.name = name;
+    return camera;
+}
+
+function createPerspectiveCamera(x, y, z, name) {
+    'use strict';
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(x, y, z);
+    camera.lookAt(scene.position);
+    camera.name = name;
+    return camera;
+}   
+
 function createScene() {
     'use strict';
-    scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     scene.add(new THREE.AxesHelper(10));
-    //Cria Base da Grua
-    createBaseGrua();
-    //Cria Contentor e Carga
-    createContenedor_e_Carga(0,0,0); 
-    //Cria Torre com Porta Lanças
-    createTorreComPortaLancas();
-    //Cria a Parte superior da grua
-    createGrua_Superior(G_Superior, rot);  //add rot (rotation)
-    scene.add(G_Superior);
+
+    // outerRadius values, smaller to bigger: 5, 10, 15
+    // y coordinates for rings, smaller to bigger: 0 -3 -6
+    addRings();
+    addCilinder();
+
+    // add objects
 
 
 
@@ -518,30 +514,31 @@ function onKeyDown(event) {
         case 'q':
         case 'Q':
             //toggleBrightness(true, "string1");
-            rot+= 0.06;
+            //rot+= 0.06;
             break;
         case 'a':
         case 'A':
             toggleBrightness(true, "string2");
-            rot -= 0.06;
+            //rot -= 0.06;
             break;
         case 'w':
         case 'W':
-            if(Carrinho.position.z < 2){
-                move_carrinho = +0.05;
-            }
+            
+            //if(Carrinho.position.z < 2){
+            //    move_carrinho = +0.05;
+            //}
             toggleBrightness(true, "string3");
             break;
         case 's':
         case 'S':
-            if(Carrinho.position.z > -3.5){
-                move_carrinho = -0.05;
-            }
+            //if(Carrinho.position.z > -3.5){
+            //    move_carrinho = -0.05;
+            //}
             toggleBrightness(true, "string4");
             break;
         case 'e':
         case 'E':
-            if (Garra.position.y > -7.125){
+            /* if (Garra.position.y > -7.125){
                 Cabo_Da_Garra.scale.y += 0.1;
                 Cabo_Da_Garra.position.y -= 0.1* desce_cabo; //aumentar baixar o cabo
             
@@ -549,12 +546,12 @@ function onKeyDown(event) {
                 desce_garra_teste = (1 + cont*0.1)*2.25;
                 altura_cabo = 2.25-desce_garra_teste;
                 Garra.position.y = altura_cabo;             //baixar garra
-            }
+            } */
             toggleBrightness(true, "string5");
             break;
         case 'd':
         case 'D':
-            if (Garra.position.y < 1.5){
+            /* if (Garra.position.y < 1.5){
                 Cabo_Da_Garra.scale.y -= 0.1;
                 Cabo_Da_Garra.position.y += 0.1* desce_cabo;   //diminuir e subir cabo
 
@@ -562,23 +559,23 @@ function onKeyDown(event) {
                 desce_garra_teste = (1 + cont*0.1)*2.25;
                 altura_cabo = 2.25-desce_garra_teste;
                 Garra.position.y = altura_cabo;          //baixar garra
-            }
+            } */
             toggleBrightness(true, "string6");            
             break;
         case 'r':
         case 'R':
             toggleBrightness(true, "string7");
-            rot_direction = -1;
+            /* rot_direction = -1;
                 rotationIncrement = 0.05
                 ;
-                alturaGarra += 0.01;
+                alturaGarra += 0.01; */
             break;
         case 'f':
         case 'F':
-            rot_direction = 1;
+            /* rot_direction = 1; */
             toggleBrightness(true, "string8");
-                rotationIncrement -= 0.05;
-                alturaGarra -=0.01;
+            // rotationIncrement -= 0.05;
+            // alturaGarra -=0.01;
             break;
         default:
             break;
@@ -647,6 +644,7 @@ function setActiveCamera(name) {
     }
 }
 
+/*
 function updateSuperior(){
     G_Superior.rotation.set(0, rot, 0);
 }
@@ -682,15 +680,16 @@ function updateDentesGarra() {
     }
 
 };
+*/
 
 function update(){
-    updateSuperior();
+    /* updateSuperior();
     if (rot_direction != 0){
        updateDentesGarra(); 
        rot_direction = 0;
     }
     Carrinho.translateZ(move_carrinho);
-    move_carrinho = 0;
+    move_carrinho = 0; */
 }
 
 function animate() {
@@ -700,6 +699,5 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-//initHUD(strings);
 init();
 animate();
