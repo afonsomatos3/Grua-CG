@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { colorSpaceToLinear, distance, materialIridescence } from 'three/examples/jsm/nodes/Nodes.js';
 
 ////////////////////////
 /*  GLOBAL VARIABLES  */
@@ -7,136 +8,45 @@ import * as THREE from 'three';
 let camera;
 let scene = new THREE.Scene();
 let renderer;
+let clock = new THREE.Clock();
+let current_time;
+let should_rotate = false;
 
+/* Control variables for the carousel */
+let cilinder_radius = 2; // cilinder radius, the rings will be constructed adjacent to the cilinder
+let ringWidth = 3; // the ring width is defined to be the same for every ring
+let numberOfRings = 3; // number of rings to be around the carousel
+let numberOfFigures = 8; // number of figures per ring
+let ringsArray = []; // array of rings, DO NOT CHANGE
+let figuresMatrix = []; // matrix of figuras parametricas, DO NOT CHANGE
+let ringDepth = 1; // depth ( or height ) of every ring, they all have the same height
 
-/* Variables for computing objects' movement
-var rot_cont = 0;
-var cont = 0;
-var rot_direction = 0;
-var G_Superior = new THREE.Object3D();
-var Cabo_Da_Garra =  new THREE.Object3D();
-var Garra = new THREE.Object3D();
-var Carrinho = new THREE.Object3D();
-var rot = 0;
-var desce_cabo = 10.375;
-var move_carrinho = 0;
-var desce_garra_teste = 0;
-var altura_cabo = 2.25;
-var cont = 0;
-var DenteGarra1 = new THREE.Object3D();
-var DenteGarra2 = new THREE.Object3D();
-var Base_Garra = new THREE.Object3D();
-var alturaGarra=0;
+// max and min height for each ring translation: smaller to bigger (1 ,2 3)
+let maxHeight1 = 1;
+let minHeight1 = -1;
+
+let maxHeight2 = 2;
+let minHeight2 = -2;
+
+let maxHeight3 = 3;
+let minHeight3 = -3;
+
+// direction values for rings movement, initially goes upwards
+let direction1 = 1;
+let direction2 = 1;
+let direction3 = 1;
+
+/*
+console.log(matrix[1][2]); // Output: 6 (element at second row, third column)
+for (let i = 0; i < rows; i++) {
+    matrix[i] = [];
 */
-
-class Manager {
-
-    constructor() {
-        this.materialsVector = [];
-    }
-
-    addToVector(material) {
-        this.materialsVector.push(material);
-    }
-
-    toggleWireframe() {
-        this.materialsVector.forEach(material => {
-            material.wireframe = !material.wireframe;
-        });
-    }
-
-}
-
-const Colors = {
-    RED: 0xFF0000,
-    GREEN: 0x00ff00,
-    BLUE: 0x0000FF,
-    PURPLE: 0x800080,
-  };
-
-let manager = new Manager();
-
-
-function addRings() {
-
-    // Outer Radiuses: big ring = 5, small = 2, width = 3
-    let initialOuterRadius = 5; // valor inical para o diametro do menor ring
-    let initialYCoordinate = 0;
-
-    let ringWidth = 3; // igual para todos
-    let yCoordinateinterval = 1;
-
-    let previousYCoordinate = initialYCoordinate + yCoordinateinterval;
-    let previousOuterRing = initialOuterRadius - ringWidth;
-
-    let numberOfRings = 3;
-
-    const extrudeSettings = {
-        steps:   1,   
-        depth:  yCoordinateinterval,  
-        bevelEnabled: false, 
-        curveSegments: 28,  // number of discrete segments describing the curve aka how smooth it is 
-    };
-
-    let ringColors = [Colors.BLUE, Colors.GREEN, Colors.RED]; 
-
-    for ( let i = 0; i < numberOfRings ; i++) {
-        
-        const shape = new THREE.Shape();
-        shape.absarc(0, 0, previousOuterRing + ringWidth, 0, Math.PI * 2, false);
-        
-        const innerCircle = new THREE.Path();
-        innerCircle.absarc(0, 0, previousOuterRing, 0, Math.PI * 2, true);
-        
-        shape.holes.push(innerCircle);
-        
-        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        const material = new THREE.MeshBasicMaterial({ color: ringColors[i], side: THREE.DoubleSide });
-        const mesh = new THREE.Mesh(geometry, material);
-
-        mesh.rotation.set( Math.PI / 2, 0, 0);
-        mesh.position.set(0, previousYCoordinate - yCoordinateinterval, 0);
-        scene.add(mesh);
-
-        //update variable values for the next ring
-        previousOuterRing += ringWidth;
-        previousYCoordinate -= yCoordinateinterval;
-
-    }
-
-}
-
-function addCilinder() {
-
-    let height = 10;
-    let radius = 2;
-    let color = Colors.PURPLE;
-
-    const extrudeSettings = {
-        steps:   1,   
-        depth:  height,  
-        bevelEnabled: false, 
-        curveSegments: 28,  // number of discrete segments describing the curve aka how smooth it is 
-    };
-
-    const shape = new THREE.Shape();
-    shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
-    
-    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
-    const mesh = new THREE.Mesh(geometry, material);
-
-    mesh.rotation.set( Math.PI / 2, 0, 0);
-    mesh.position.set(0, height - 3, 0);
-    scene.add(mesh);
-
-}
 
 //////////////////
 /*     HUD      */
 //////////////////
 
-/*
+/* old hud functions
 var strings = ["Q/q - Rodar Contra-Lança", "A/a - Rodar Contra-Lança", "W/w - Transladar Carrinho",
                 "S/s - Transladar carrinho", "E/e - Subir Garra", "D/d - Descer Garra", "R/r - Abrir Garra",
                 "F/f - Fechar Garra", "1 - Vista Frontal", "2 - Vista Lateral", "3 - Vista de Topo", 
@@ -202,19 +112,17 @@ hudElement_14.style.backgroundColor = "rgba(0, 0, 0, 0)";
 
 /*
 
-////////////////////////////////////
-/*  AUXILIARY BUILDING FUNCTIONS  */
-////////////////////////////////////
-
+/* notes
 // parametricas sao THREE.ParametricGeometry devem consistir em 8 formas diferentes, incluindo superfícies regradas (e.g.,
+
 //hiperbolóide de 1 folha). Colocar múltiplas instâncias destas 8 superfícies sobre os restantes
 //anéis, tendo cada instância dimensões e orientações distintas.
 
-/*
+
 MeshLambertMaterial, MeshPhongMaterial,
 MeshToonMaterial, MeshNormalMaterial
 aneis, pararmetrticas, faixa de mobius, cilindro sao os 4 objetos??
-*/
+
 
 // Devem recorrer às geometrias THREE.RingGeometry -> Clickbait, THREE.TubeGeometry ou
 // THREE.ExtrudeGeometry.
@@ -222,19 +130,9 @@ aneis, pararmetrticas, faixa de mobius, cilindro sao os 4 objetos??
 // usar o THREE.Clock()
 
 //extrude geometry ( tem q ter uma shape )-> aneis
+*/
 
-/*
-
-function addBase(obj, x, y, z) {
-    'use strict';
-    const geometry = new THREE.BoxGeometry(3, 1, 3);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe:true  }); 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y , z);
-    obj.add(mesh); 
-
-    manager.addToVector(material);
-}
+/* old functions
 
 function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     'use strict';
@@ -269,17 +167,6 @@ function addCaboTirante(obj, x1, y1, z1, x2, y2, z2) {
     manager.addToVector(material);
 }
 
-function addTorreMetalica(obj, x, y, z) {
-    'use strict';
-    const geometry = new THREE.BoxGeometry(1, 11, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true});
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y + 6, z);
-    obj.add(mesh);
-
-    manager.addToVector(material);
-}
-
 function createCameraWithinGarra(obj,x,y,z) {
     'use strict';
     // Criar a câmera ortográfica
@@ -301,100 +188,163 @@ function createCameraWithinGarra(obj,x,y,z) {
     obj.add(camera);
 }
 
-function createBaseGrua() {
-    'use strict';
-    const gruaBase = new THREE.Object3D();
-    addBase(gruaBase, 0, 0, 0);
-    scene.add(gruaBase);
-}
-
-function createContenedor_e_Carga(x, y, z) {
-    const ContenedorDeCarga = new THREE.Object3D();
-    let xPos = THREE.MathUtils.randFloat(6, 5);  //random x position
-    let zPos = THREE.MathUtils.randFloat(6, 5);  //random z position
-    addBaseContentor(ContenedorDeCarga, xPos, 0, zPos); 
-    addLadosContentores_dir_esq(ContenedorDeCarga, xPos+2, 0.5, zPos);   //direito.
-    addLadosContentores_dir_esq(ContenedorDeCarga, xPos-2, 0.5, zPos);   //esquerdo 
-    addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos+2);   //frente 
-    addLadosContentores_frente_tras(ContenedorDeCarga, xPos, 0.5, zPos-2);   //tras 
-    scene.add(ContenedorDeCarga);
-}
-
-//Braço vertical
-function createTorreComPortaLancas(){
-    'use strict';
-    const TorreComPortaLancas = new THREE.Object3D();
-    addTorreMetalica(TorreComPortaLancas,0,0,0);
-    addPortaLanca(TorreComPortaLancas,0,0,0);
-    scene.add(TorreComPortaLancas);
-}
-
-function createContraPeso(obj){
-    'use strict';
-    const ContraPeso = new THREE.Object3D();
-    addContraPeso(ContraPeso,0,0,0);
-    obj.add(ContraPeso);
-}
-
-//Braco horizontal
-function createTirantesContraLanca(obj){
-    'use strict';
-    const Lanca = new THREE.Object3D();
-
-    addLanca(Lanca,0,0,0);
-    addCaboTirante(Lanca,0.5,11.5,-3,0,14.5,0);
-    addCaboTirante(Lanca,-0.5,11.5,-3,0,14.5,0);
-    addCaboTirante(Lanca,0,11.5,4,0,14.5,0);
-    obj.add(Lanca);
-}
-
-function createCabine(obj){
-    'use strict';
-    const Cabine = new THREE.Object3D();
-    addCabine(Cabine,-1,10,0);
-    obj.add(Cabine);
-}
-
-function createCarrinho_E_Garra(obj){
-    'use strict';
-    addCarrinhoTranslacao(Carrinho,0,10.375,5.5);
-    createGarra_Sobe_Desce(Carrinho);
-    obj.add(Carrinho);
-
-}
-
-function createGarra_Sobe_Desce(obj){
-    'use strict';
-    addCaboTirante(Cabo_Da_Garra,0,8.125,5.5,0,10.375,5.5);
-    createGarraArticulada(Garra);
-    obj.add(Garra);
-    obj.add(Cabo_Da_Garra);
-}
-
-function createGarraArticulada(obj){
-    'use strict';
-    createCameraWithinGarra(Base_Garra,0,8.125,5.5)
-    addGarraArticulada(Base_Garra,0,8.125,5.5);
-    addDenteGarra(DenteGarra1,0,7.625,5.125);
-    addDenteGarra(DenteGarra2,0,7.625,5.875);
-    obj.add(Base_Garra);
-    obj.add(DenteGarra1);
-    obj.add(DenteGarra2);
-}
-
-function createGrua_Superior(obj, r){
-    'use strict';
-    var Grua_Superior = new THREE.Object3D();
-    Grua_Superior.rotation.set(0, r, 0)  // rotation value is in radians
-    Grua_Superior.rotation.set(0, r, 0);  //add value for rotation in rad (Math.PI)
-    createCabine(Grua_Superior);
-    createTirantesContraLanca(Grua_Superior);
-    createContraPeso(Grua_Superior);
-    createCarrinho_E_Garra(Grua_Superior);   //add translation for garra
-    obj.add(Grua_Superior); 
-}
-
 */
+
+class Manager {
+
+    constructor() {
+        this.materialsVector = [];
+    }
+
+    addToVector(material) {
+        this.materialsVector.push(material);
+    }
+
+    toggleWireframe() {
+        this.materialsVector.forEach(material => {
+            material.wireframe = !material.wireframe;
+        });
+    }
+
+}
+
+const Colors = {
+    RED: 0xFF0000,
+    GREEN: 0x00ff00,
+    BLUE: 0x0000FF,
+    PURPLE: 0x800080,
+};
+
+let manager = new Manager();
+
+class Box {
+
+    constructor() {
+        this.mesh = new THREE.Mesh();
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+        const mesh = new THREE.Mesh(geometry, material);
+
+        mesh.material = material;
+        mesh.geometry = geometry;
+
+        return mesh;
+    }
+
+}
+
+class SmallBox {
+
+    constructor() {
+        this.mesh = new THREE.Mesh();
+        const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+        const material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+        const mesh = new THREE.Mesh(geometry, material);
+
+        mesh.material = material;
+        mesh.geometry = geometry;
+
+        return mesh;
+    }
+
+}
+
+function addRings(father_reference) {
+
+    // the first ring is the smallest, the third ring is the biggest
+    // Outer Radiuses: , small = 2, width = 3, big ring = 5
+    let initialOuterRadius = cilinder_radius + ringWidth; // valor inical para o diametro do menor ring
+    let initialYCoordinate = 0;
+
+    let yCoordinateinterval = ringDepth;
+
+    let previousYCoordinate = initialYCoordinate + yCoordinateinterval;
+    let previousOuterRing = initialOuterRadius - ringWidth;
+
+    const extrudeSettings = {
+        steps: 1,
+        depth: yCoordinateinterval,
+        bevelEnabled: false,
+        curveSegments: 28,  // number of discrete segments describing the curve aka how smooth it is 
+    };
+
+    let ringColors = [Colors.BLUE, Colors.GREEN, Colors.RED];
+
+    for (let i = 0; i < numberOfRings; i++) {
+
+        const shape = new THREE.Shape();
+        shape.absarc(0, 0, previousOuterRing + ringWidth, 0, Math.PI * 2, false);
+
+        const innerCircle = new THREE.Path();
+        innerCircle.absarc(0, 0, previousOuterRing, 0, Math.PI * 2, true);
+
+        shape.holes.push(innerCircle);
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        const material = new THREE.MeshBasicMaterial({ color: ringColors[i], side: THREE.DoubleSide });
+ 
+        ringsArray[i].geometry = geometry;
+        ringsArray[i].geometry.rotateX( - Math.PI / 2);
+        
+        ringsArray[i].material = material;
+
+        ringsArray[i].position.set(0, previousYCoordinate - yCoordinateinterval, 0);
+
+        //update variable values for the next ring
+        previousOuterRing += ringWidth;
+        previousYCoordinate -= yCoordinateinterval;
+
+        father_reference.add(ringsArray[i]);
+
+    }
+
+}
+
+function addCilinder(current_object) {
+
+    let height = 10;
+    let radius = cilinder_radius;
+
+    const extrudeSettings = {
+        steps: 1,
+        depth: height,
+        bevelEnabled: false,
+        curveSegments: 28,  // number of discrete segments describing the curve aka how smooth it is 
+    };
+
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    const material = new THREE.MeshBasicMaterial({ color: Colors.PURPLE, side: THREE.DoubleSide });
+    
+    current_object.geometry = geometry;
+    geometry.rotateX( - Math.PI / 2);
+
+    current_object.material = material;
+
+}
+
+function onResize() {
+    'use strict';
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    camera.aspect = aspectRatio;
+    camera.updateProjectionMatrix();
+}
+
+function setActiveCamera(name) {
+    'use strict';
+    const cameras = scene.children.filter(object => object.isCamera);
+    cameras.forEach(camera => {
+        camera.layers.disable(1);
+    });
+    const activeCamera = scene.getObjectByName(name);
+    if (activeCamera && activeCamera.isCamera) {
+        activeCamera.layers.enable(1);
+        camera = activeCamera;
+    }
+}
 
 function createOrthographicCamera(x, y, z, viewSize, name) {
     'use strict';
@@ -420,23 +370,136 @@ function createPerspectiveCamera(x, y, z, name) {
     camera.lookAt(scene.position);
     camera.name = name;
     return camera;
-}   
+}
+
+let object0 = new Box();
+let object1 = new Box();
+let object2 = new Box();
+let object3 = new Box();
+let object4 = new Box();
+
+// figs parametricas
+let smallObject1 = new SmallBox();
+let smallObject2 = new SmallBox();
+
+let smallObject3 = new SmallBox();
+let smallObject4 = new SmallBox();
+
+let smallObject5 = new SmallBox();
+let smallObject6 = new SmallBox();
+
+let _cilinder = new THREE.Mesh();
+
+let smallObjects = [];
+smallObjects.push(smallObject1);
+smallObjects.push(smallObject2);
+smallObjects.push(smallObject3);
+smallObjects.push(smallObject4);
+smallObjects.push(smallObject5);
+smallObjects.push(smallObject6);
+
+function addFigures() {
+
+    let figure_angle = ( 2 * Math.PI ) / numberOfFigures;
+    let figure_height = ringDepth + 0.5;
+    let distanceToCenter;
+    let current_radius;
+    let previous_radius = cilinder_radius;
+
+    for (let i = 0; i < numberOfRings; i++) {
+
+        current_radius = cilinder_radius + ( i * ringWidth );
+        distanceToCenter = current_radius + ( ringWidth / 2 );
+
+        for (let j = 0; j < numberOfFigures; j++) {
+
+            // dar a forma ao elemento
+            let _tmpBox = new Box();
+            figuresMatrix[i][j].geometry = _tmpBox.geometry;
+            figuresMatrix[i][j].material = _tmpBox.material;
+            
+            // posicionar cada figura com a posicao e orientacao correta
+            figuresMatrix[i][j].position.set( distanceToCenter * Math.cos( ( j * figure_angle ) ), figure_height , distanceToCenter * Math.sin( ( j * figure_angle ) ));
+            figuresMatrix[i][j].rotateY( j * figure_angle );
+
+            ringsArray[i].add(figuresMatrix[i][j]);
+        }
+        previous_radius = current_radius;
+    }
+
+}
 
 function createScene() {
     'use strict';
+
     scene.background = new THREE.Color(0xffffff);
     scene.add(new THREE.AxesHelper(10));
+    
+    addCilinder(_cilinder);
+    addRings(_cilinder);
+    addFigures();
+    
+    scene.add(_cilinder);
 
+    // o vetor posica é CONSTANTEMENT CALCULADO A PARTIR DO REFERNCIAL DO PAI !!!
+
+    /*
     // outerRadius values, smaller to bigger: 5, 10, 15
     // y coordinates for rings, smaller to bigger: 0 -3 -6
-    addRings();
-    addCilinder();
+    addRings(cilinder);
 
     // add objects
+    */
+
+    /*
+    _cilinder.add(object1); // aneis 
+    _cilinder.add(object2); // aneis 
+    _cilinder.add(object3); // aneis
+
+    // afastamento dos aneis, é feito na funcao addRings
+    object1.position.set(3, 0, 0);
+    object2.position.set(6, 0, 0);
+    object3.position.set(9, 0, 0);
+
+    // adicionar figuras parametricas
+    object1.add(smallObject1);
+    object1.add(smallObject2);
+
+    object2.add(smallObject3);
+    object2.add(smallObject4);
+    
+    object3.add(smallObject5);
+    object3.add(smallObject6);
+
+    // altura das figuras parametricas
+    smallObjects.forEach( smallObject => {
+        smallObject.position.set(0, 10, 0);    
+    });
+
+    /*
+    let number_of_objects = smallObjects.length;
+    let tmp = Math.PI / number_of_objects;
+
+    for (let j = 0; j < number_of_objects; j++) {
+        smallObjects[j].position.x = Math.cos( ( j * tmp ) ) ;
+        smallObjects[j].position.z = Math.sin( ( j * tmp ) ) ;
+        smallObjects[j].rotateY( j * tmp ) ;  
+    }
+    */
+
+    /*
+    //IRRELEVANT
+    let obj = new THREE.Object3D();
+    obj.rotateOnAxis.y = 1; // object space
+    obj.rotateOnWorldAxis(new THREE.Vector3(0,1,0), 1); // world space
+    obj.rotateY(1); // local space
+
+    obj.rotation.set(0,1,0);
+
+    */
 
 
-
-
+    
     // Câmeras ortográficas
     const viewSize = 30;
     const cameraFrontal = createOrthographicCamera(0, 0, 50, viewSize, 'Frontal');
@@ -446,14 +509,14 @@ function createScene() {
 
     scene.add(cameraFrontal);
     scene.add(cameraLateral);
-    scene.add(cameraTopo);  
+    scene.add(cameraTopo);
 
     // Câmeras com projeção perspectiva
-    const cameraPerspectiva = createPerspectiveCamera(10, 20, 3,'Perspectiva');
+    const cameraPerspectiva = createPerspectiveCamera(10, 20, 3, 'Perspectiva');
     const cameraMovel = createPerspectiveCamera(0, 15, 25, 'Movel');
-    const cameraOrtograficaDinamica = createOrthographicCamera(10, 20, 34,viewSize, 'OrtograficaDinamica');
+    const cameraOrtograficaDinamica = createOrthographicCamera(10, 20, 34, viewSize, 'OrtograficaDinamica');
 
-    scene.add(cameraOrtograficaDinamica)
+    scene.add(cameraOrtograficaDinamica);
     scene.add(cameraPerspectiva);
     scene.add(cameraMovel);
 
@@ -464,236 +527,160 @@ function render() {
     renderer.render(scene, camera);
 }
 
+function initArrays() {
+    
+    // outer for loop: initialize ringsArray with the previously defined number of rings
+    // inner for loop: initialize figuresMatrix with the previously defined number of figures per ring
+    for ( let t = 0; t < numberOfRings; t++ ) {
+        
+        const mesh = new THREE.Mesh();
+        ringsArray.push(mesh);
+        figuresMatrix[t] = [];
+
+        for (let k = 0; k < numberOfFigures; k++ ) {
+            const mesh = new THREE.Mesh();
+            figuresMatrix[t].push(mesh);
+        }
+
+    }
+
+}
+
 function init() {
     'use strict';
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    
+
+    initArrays();
+
     createScene();
 
     setActiveCamera('Frontal');
-    
+
     window.addEventListener('resize', onResize);
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
 }
 
-function onKeyDown(event) {
-    
+let rotation_value = Math.PI / 8;
+
+document.addEventListener('keydown', (event) => {
+
     switch (event.key) {
         case '1':
             setActiveCamera('Frontal');
-            //toggleCameraButtonBrightness("string9");
             break;
         case '2':
             setActiveCamera('Lateral');
-            //toggleCameraButtonBrightness("string10");
             break;
         case '3':
             setActiveCamera('Topo');
-            //toggleCameraButtonBrightness("string11");
             break;
         case '4':
             setActiveCamera('Perspectiva');
-            //toggleCameraButtonBrightness("string12");
             break;
         case '5':
             setActiveCamera('OrtograficaDinamica');
-            //toggleCameraButtonBrightness("string13");
             break;
         case '6':
             setActiveCamera('Garra');
-            //toggleCameraButtonBrightness("string14");
             break;
         case '7':
             manager.toggleWireframe();
-            //toggleBrightness_15("string15");
             break;
-        case 'q':
-        case 'Q':
-            //toggleBrightness(true, "string1");
-            //rot+= 0.06;
+        case 'z':
+            object0.position.x += 1;
+            break;
+        case 'x':
+            object0.position.x -= 1;
             break;
         case 'a':
         case 'A':
+            object0.position.z += 1;
             toggleBrightness(true, "string2");
-            //rot -= 0.06;
+            break;
+        case 'q':
+        case 'Q':
+            object0.rotateY(rotation_value); // NOT ROTATING THE OBJECT, ITS ROTATING THE AXIS ITSELF, WHICH MEANS CHILDREN MOVE, BUT FATHER STAYS THE SAME, pivot is father
             break;
         case 'w':
         case 'W':
-            
-            //if(Carrinho.position.z < 2){
-            //    move_carrinho = +0.05;
-            //}
+            object0.rotateOnWorldAxis(new THREE.Vector3(0,rotation_value,0), 1); //ROTATE THE FATHER, AND BY CONSEQUENCE, THE CHILDREN, pivot is father
             toggleBrightness(true, "string3");
             break;
         case 's':
         case 'S':
-            //if(Carrinho.position.z > -3.5){
-            //    move_carrinho = -0.05;
-            //}
+            object0.position.z -= 1;
             toggleBrightness(true, "string4");
             break;
         case 'e':
-        case 'E':
-            /* if (Garra.position.y > -7.125){
-                Cabo_Da_Garra.scale.y += 0.1;
-                Cabo_Da_Garra.position.y -= 0.1* desce_cabo; //aumentar baixar o cabo
-            
-                cont+=1;
-                desce_garra_teste = (1 + cont*0.1)*2.25;
-                altura_cabo = 2.25-desce_garra_teste;
-                Garra.position.y = altura_cabo;             //baixar garra
-            } */
+        case 'E':    
+            object0.rotation.y += rotation_value;
             toggleBrightness(true, "string5");
             break;
         case 'd':
         case 'D':
-            /* if (Garra.position.y < 1.5){
-                Cabo_Da_Garra.scale.y -= 0.1;
-                Cabo_Da_Garra.position.y += 0.1* desce_cabo;   //diminuir e subir cabo
-
-                cont-=1;
-                desce_garra_teste = (1 + cont*0.1)*2.25;
-                altura_cabo = 2.25-desce_garra_teste;
-                Garra.position.y = altura_cabo;          //baixar garra
-            } */
-            toggleBrightness(true, "string6");            
+            object0.add(new THREE.AxesHelper(3));
+            toggleBrightness(true, "string6");
             break;
         case 'r':
         case 'R':
+            object0.rotateY(rotation_value);
             toggleBrightness(true, "string7");
-            /* rot_direction = -1;
-                rotationIncrement = 0.05
-                ;
-                alturaGarra += 0.01; */
             break;
         case 'f':
         case 'F':
-            /* rot_direction = 1; */
             toggleBrightness(true, "string8");
-            // rotationIncrement -= 0.05;
-            // alturaGarra -=0.01;
             break;
         default:
             break;
+        case 'p':
+            should_rotate = !should_rotate;
     }
-    render(); // Renderizar a cena após mudar a câmera
-};
+    render();
+});
 
-function onKeyUp(event) {
+function update() {
     
-    switch (event.key) {
-        case 'q':
-        case 'Q':
-            //toggleBrightness(true, "string1");
-            break;
-        case 'a':
-        case 'A':
-            //toggleBrightness(true, "string2");
-            break;
-        case 'w':
-        case 'W':
-            //toggleBrightness(true, "string3");
-            break;
-        case 's':
-        case 'S':
-            //toggleBrightness(true, "string4");
-            break;
-        case 'e':
-        case 'E':
-            //toggleBrightness(true, "string5");
-            break;
-        case 'd':
-        case 'D':
-            //toggleBrightness(true, "string6");
-            break;
-        case 'r':
-        case 'R':
-            //toggleBrightness(true, "string7");
-            break;
-        case 'f':
-        case 'F':
-            //toggleBrightness(true, "string8");
-            break;
-        default:
-            break;
+    current_time = clock.getDelta();
+
+    if (should_rotate) {    
+    
+        if (object1.position.y > maxHeight1 ) {
+            direction1 *= -1;
+        }
+    
+        if (object2.position.y > maxHeight2 ) {
+            direction2 *= -1;
+        }
+    
+        if (object3.position.y > maxHeight3 ) {
+            direction3 *= -1;
+        }
+    
+        if (object1.position.y < minHeight1 ) {
+            direction1 *= -1;
+        }
+    
+        if (object2.position.y < minHeight2 ) {
+            direction2 *= -1;
+        }
+    
+        if (object3.position.y < minHeight3 ) {
+            direction3 *= -1;
+        }
+    
+        object1.position.y += 1 * direction1 * current_time;
+        object2.position.y += 1 * direction2 * current_time;
+        object3.position.y += 1 * direction3 * current_time;
+    
+        object0.rotation.y += 1 * current_time;
     }
-};
-
-function onResize() {
-    'use strict';
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    camera.aspect = aspectRatio;
-    camera.updateProjectionMatrix();
-}
-
-function setActiveCamera(name) {
-    'use strict';
-    const cameras = scene.children.filter(object => object.isCamera);
-    cameras.forEach(camera => {
-        camera.layers.disable(1);
-    });
-    const activeCamera = scene.getObjectByName(name);
-    if (activeCamera && activeCamera.isCamera) {
-        activeCamera.layers.enable(1);
-        camera = activeCamera;
-    }
-}
-
-/*
-function updateSuperior(){
-    G_Superior.rotation.set(0, rot, 0);
-}
-
-function updateDentesGarra() {
-
-
-    //Ângulo mínimo (0 graus)
-    //Ângulo máximo (~45 graus)
-    const max_rot = 5;
-
-    // Atualiza o ângulo de rotação com base na direção
-    // Incremento de rotação
-    if ((rot_cont < max_rot) && (rot_direction==-1)){
-        DenteGarra1.rotateX(Math.PI/16 * rot_direction);
-        DenteGarra1.translateZ(1.39);
-        DenteGarra1.translateY(-1.15);
-
-        DenteGarra2.rotateX(-Math.PI/16 * rot_direction);
-        DenteGarra2.translateZ(-1.6);
-        DenteGarra2.translateY(1);
-        rot_cont+=1;
-    }
-    else if ((rot_cont > 0) && (rot_direction==1)){
-        DenteGarra1.translateZ(-1.39);
-        DenteGarra1.translateY(1.15);
-        DenteGarra1.rotateX(Math.PI/16 * rot_direction);
-
-        DenteGarra2.translateZ(1.6);
-        DenteGarra2.translateY(-1);
-        DenteGarra2.rotateX(-Math.PI/16 * rot_direction);
-        rot_cont-=1;
-    }
-
-};
-*/
-
-function update(){
-    /* updateSuperior();
-    if (rot_direction != 0){
-       updateDentesGarra(); 
-       rot_direction = 0;
-    }
-    Carrinho.translateZ(move_carrinho);
-    move_carrinho = 0; */
 }
 
 function animate() {
     'use strict';
-    update();
+
+    //update();
     render();
     requestAnimationFrame(animate);
 }
