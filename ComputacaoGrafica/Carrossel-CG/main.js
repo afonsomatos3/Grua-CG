@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { ParametricGeometries } from 'three/addons/geometries/ParametricGeometries.js';
+import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 
 ////////////////////////
 /*  GLOBAL VARIABLES  */
@@ -9,9 +11,13 @@ let scene = new THREE.Scene();
 let renderer;
 
 let clock = new THREE.Clock();
-let current_time;
-
-const keyState = {};
+let delta_time;
+let elapsed_time_1 = 0;
+let elapsed_time_2 = 0;
+let elapsed_time_3 = 0;
+let initial_ring_height_1;
+let initial_ring_height_2;
+let initial_ring_height_3;
 
 /* Control variables for the carousel */
 
@@ -25,30 +31,15 @@ const ringsArray = [];
 
 let numberOfFigures = 8; // number of figures per ring
 const figuresMatrix = [];
+const figuresRotationValue = [];
 
 /* Control variables for movement, smaller ring is number 1, bigger ring is number 3 */
-
-let UP = 1;
-let DOWN = -1;
 
 let should_rotate_1 = false;
 let should_rotate_2 = false;
 let should_rotate_3 = false;
 
-let maxHeight1 = 1;
-let minHeight1 = -1;
-
-let maxHeight2 = 2;
-let minHeight2 = -2;
-
-let maxHeight3 = 3;
-let minHeight3 = -3;
-
-let direction1 = UP;
-let direction2 = UP;
-let direction3 = UP;
-
-let ring_speed = 1;
+let ring_speed = 1.3;
 let cylinder_speed = 1;
 
 /* normal Map definition for material normalMaterial */
@@ -122,6 +113,7 @@ const Colors = {
 
 let manager = new Manager();
 
+/* For debug purposes only */
 class Box {
 
     constructor() {
@@ -138,6 +130,7 @@ class Box {
 
 }
 
+/* For debug purposes only */
 class SmallBox {
 
     constructor() {
@@ -152,6 +145,53 @@ class SmallBox {
         return mesh;
     }
 
+}
+
+class Figure {
+    
+    constructor(index) {
+        return this.getParametricGeometry(index);
+    }
+
+    getParametricGeometry(index) {
+        
+        let real_index = (index % 8);
+        let geometry;
+        let material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+        let scale_value;
+
+        switch(real_index) {
+            case 0:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 40, 40);
+                scale_value = 0.2;
+                break;
+            case 1:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 40, 40);
+                break;
+            case 2:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 40, 40);
+                break;
+            case 3:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                break;
+            case 4:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                break;
+            case 5:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                break;
+            case 6:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                break;
+            case 7:
+                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                break;
+        }
+
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.scale.set(scale_value, scale_value, scale_value);
+        return mesh;
+    }
 }
 
 function addRings(father_reference) {
@@ -228,8 +268,6 @@ function addCylinder(current_object) {
 
     current_object.material = material;
 
-    manager.addToVector(material);
-
 }
 
 function onResize() {
@@ -294,18 +332,15 @@ function addFigures() {
 
         for (let j = 0; j < numberOfFigures; j++) {
 
-            // dar a forma ao elemento
-            let _tmpBox = new Box();
-            figuresMatrix[i][j].geometry = _tmpBox.geometry;
-            figuresMatrix[i][j].material = _tmpBox.material;
-            
-            // posicionar cada figura com a posicao e orientacao correta
+            // give shape to each figure
+            figuresMatrix[i][j] = new Figure(i+j);
+
+            //  calculate and apply the correct posicion/orientation for each figure
             figuresMatrix[i][j].position.set( distanceToCenter * Math.cos( ( j * figure_angle ) ), figure_height , distanceToCenter * Math.sin( ( j * figure_angle ) ));
-            figuresMatrix[i][j].rotateY( j * figure_angle );
+            figuresMatrix[i][j].rotation.set(0, - j * figure_angle, 0);
 
             ringsArray[i].add(figuresMatrix[i][j]);
 
-            manager.addToVector(figuresMatrix[i][j].material);
         }
     }
 
@@ -315,7 +350,7 @@ function createScene() {
     'use strict';
 
     scene.background = new THREE.Color(0xffffff);
-    scene.add(new THREE.AxesHelper(10));
+    // scene.add(new THREE.AxesHelper(10));
     
     // add objects hierarchically
     addCylinder(_cylinder);
@@ -323,6 +358,8 @@ function createScene() {
     addFigures();
     
     scene.add(_cylinder);
+
+    // manager.changeMaterial('0');
     
     // Câmeras ortográficas
     const viewSize = 30;
@@ -384,6 +421,10 @@ function init() {
 
     createScene();
 
+    initial_ring_height_1 = ringsArray[0].position.y;
+    initial_ring_height_2 = ringsArray[1].position.y;
+    initial_ring_height_3 = ringsArray[2].position.y;
+
     setActiveCamera('Frontal');
 
     window.addEventListener('resize', onResize);
@@ -391,23 +432,6 @@ function init() {
 }
 
 function onKeyDown(event) {
-
-    /* keyState[event.key] = true;
-
-    if (keyState['ArrowUp']) {
-        cube.position.y += speed;
-    }
-    if (keyState['ArrowDown']) {
-        cube.position.y -= speed;
-    }
-    if (keyState['ArrowLeft']) {
-        cube.position.x -= speed;
-    }
-    if (keyState['ArrowRight']) {
-        cube.position.x += speed;
-    }
-    */
-
 
     switch (event.key) {
         case '1':
@@ -463,52 +487,31 @@ function onKeyDown(event) {
             // TODO: desactivar o calculo da iluminacao
             break;
     }
-    render();
+    //render(); -> do we need this here?
 }
 
 function update() {
     'use strict';
     
-    current_time = clock.getDelta();
+    delta_time = clock.getDelta();
+    
 
     if (should_rotate_1) {    
-        if (ringsArray[0].position.y > maxHeight1 ) {
-            direction1 = DOWN;
-        }
-        
-        if (ringsArray[0].position.y < minHeight1 ) {
-            direction1 = UP;
-        }
-
-        ringsArray[0].position.y += ring_speed * direction1 * current_time;
+        ringsArray[0].position.y = Math.sin( (initial_ring_height_1 + elapsed_time_1) * ring_speed );
+        elapsed_time_1 += delta_time;
     }
     
     if (should_rotate_2) {
-        if (ringsArray[1].position.y > maxHeight2 ) {
-            direction2 = DOWN;
-        }
-
-        if (ringsArray[1].position.y < minHeight2 ) {
-            direction2 = UP;
-        }
-        
-        ringsArray[1].position.y += ring_speed * direction2 * current_time;
+        ringsArray[1].position.y = Math.sin( (initial_ring_height_2 + elapsed_time_2) * ring_speed );
+        elapsed_time_2 += delta_time;
     }
 
     if (should_rotate_3) {
-        if (ringsArray[2].position.y > maxHeight3 ) {
-            direction3 = DOWN;
-        }
-
-        if (ringsArray[2].position.y < minHeight3 ) {
-            direction3 = UP;
-        }
-    
-        ringsArray[2].position.y += ring_speed * direction3 * current_time;
+        ringsArray[2].position.y = Math.sin( (initial_ring_height_3 + elapsed_time_3) * ring_speed );
+        elapsed_time_3 += delta_time;
     }
     
-        _cylinder.rotation.y += cylinder_speed * current_time;
-    
+    _cylinder.rotation.y += cylinder_speed * delta_time;
 }
 
 function animate() {
