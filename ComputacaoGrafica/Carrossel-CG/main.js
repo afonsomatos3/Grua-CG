@@ -203,7 +203,7 @@ function createMobiusStrip(positionX, positionY , positionZ ) {
 }
 
 function addLights(scene) {
-    // Criar oito luzes pontuais
+
     for (let i = 0; i < 8; i++) {
         const pointLight = new THREE.PointLight(0xffffff, 15);
         pointLight.position.set(0, 0, 0);
@@ -211,16 +211,16 @@ function addLights(scene) {
         pointLights.push(pointLight);
     }
 
-    // Posicionar as luzes pontuais
+    
     pointLights.forEach((pointLight, index) => {
-        const angle = (Math.PI * 2 * index) / 8; // Espaçamento angular uniforme
-        const radius = 2; // Raio da circunferência onde as luzes serão posicionadas
+        const angle = (Math.PI * 2 * index) / 8;
+        const radius = 2; 
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
-        pointLight.position.set(x, y, 0); // Posicionar a luz
+        pointLight.position.set(x, y, 0); 
     });
 
-    // Criar a luz de holofote
+   
     spotLight.position.set(0, 0,0 );
     spotLight.angle = Math.PI / 4;
     spotLight.penumbra = 0.1;
@@ -228,8 +228,8 @@ function addLights(scene) {
     spotLight.distance = 200;
     scene.add(spotLight);
 
-    // Posicionar a luz de holofote
-    spotLight.position.set(10, 10,10); // Posicionar a luz de holofote ligeiramente acima da base da faixa de Möbius
+    
+    spotLight.position.set(10, 10,10);
 }
 
 
