@@ -12,6 +12,8 @@ let renderer;
 
 let clock = new THREE.Clock();
 let delta_time;
+let iteration_value = 0;
+
 let elapsed_time_1 = 0;
 let elapsed_time_2 = 0;
 let elapsed_time_3 = 0;
@@ -31,7 +33,7 @@ const ringsArray = [];
 
 let numberOfFigures = 8; // number of figures per ring
 const figuresMatrix = [];
-const figuresRotationValue = [];
+const figuresRotationValues = [1, 2, 3, 4, 1 ,3, 1 ,4];
 
 /* Control variables for movement, smaller ring is number 1, bigger ring is number 3 */
 
@@ -113,6 +115,7 @@ const Colors = {
     GREEN: 0x00ff00,
     BLUE: 0x0000FF,
     PURPLE: 0x800080,
+    ORANGE: 0xFFA500,
 };
 
 let manager = new Manager();
@@ -161,8 +164,8 @@ class Figure {
         
         let real_index = (index % 8);
         let geometry;
-        let material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
-        let scale_value;
+        let material = new THREE.MeshBasicMaterial({ color: Colors.ORANGE, wireframe: true });
+        let scale_value = 1;
 
         switch(real_index) {
             case 0:
@@ -170,25 +173,32 @@ class Figure {
                 scale_value = 0.2;
                 break;
             case 1:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 40, 40);
+                geometry = new ParametricGeometry( parametric_paper, 15, 15);
+                scale_value = 0.6;
                 break;
             case 2:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 40, 40);
+                geometry = new ParametricGeometry( parametricHelix, 15, 15);
+                scale_value = 0.8;
                 break;
             case 3:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                geometry = new ParametricGeometry( parametric_thing, 15, 15);
+                scale_value = 0.5;
                 break;
             case 4:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                geometry = new ParametricGeometry( parametric_eight, 25, 25);
+                scale_value = 0.2;
                 break;
             case 5:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                geometry = new ParametricGeometry( parametric_globe, 15, 15);
+                scale_value = 0.5;
                 break;
             case 6:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                geometry = new ParametricGeometry( parametricWave_2, 25, 25);
+                scale_value = 0.2;
                 break;
             case 7:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 50, 50);
+                geometry = new ParametricGeometry( parametric_espanta_espiritos, 15, 15);
+                scale_value = 0.5;
                 break;
         }
 
@@ -272,6 +282,93 @@ function addLights(scene) {
     spotLight.position.set(10, 10,10);
 }
 
+/* parametric functions */ 
+
+function parametric_eight(u, v, target) {
+    const coils = 4;
+    const radius = 1;
+    const height = 2;
+    const theta = u * coils * 2 * Math.PI;
+    const x = radius * Math.cos(theta + 5);
+    const y = height * u;
+    const z = radius * Math.sin(theta / 2);
+    target.set(x, y, z);
+}
+
+function parametricHelix(u, v, target) {
+    const coils = 4;
+    const radius = 1;
+    const height = 2;
+    const theta = u * coils * 2 * Math.PI;
+    const x = radius * Math.cos(theta);
+    const y = height * u;
+    const z = radius * Math.sin(theta);
+    target.set(x, y, z);
+}
+
+function parametricWave_2(u, v, target) {
+    const x = Math.E ** v;
+    const y = Math.cos( u + v ) + Math.cos( u + v);
+    const z = Math.LN2;
+    target.set(x, y, z);
+}
+
+function parametric_paper(u, v, target) {
+
+    u *= - 2 * Math.PI;
+    v += 0.5;
+
+    let y = v;
+    const x = Math.cos(u);
+    const z = x -y;
+
+    target.set(x, y, z);
+}
+
+function parametric_thing(u, v, target) {
+    let R = 3;
+    let r = 1;
+
+    u = Math.exp(v*3);
+    v *= 2 * Math.PI;
+
+    const x = (R * r++ * Math.cos(v)) * Math.cos(u);
+    const y = r * Math.sin(v);
+    const z = (R-- / r * Math.cos(v)) * Math.sin(u);
+    
+    target.set(x, y, z);
+}
+
+function parametric_globe(u, v, target) {
+    let R = 3;
+    let r = 1;
+
+    u *= 2 * Math.PI;
+    v *= 2 * Math.PI;
+
+    const x = (R * r++ * Math.cos(v)) * Math.cos(u);
+    const y = r * Math.sin(v);
+    const z = (R-- / r * Math.cos(v)) * Math.sin(u);
+    
+    target.set(x, y, z);
+}
+
+function parametric_espanta_espiritos(u, v, target) {
+    const R = 3;
+    const r = 1;
+
+    u *= 2 * Math.PI;
+    v *= 2 * Math.PI;
+
+    const x = (R * r * Math.cos(v)) * Math.cos(u);
+    const y = r * Math.sin(v);
+    const z = (R / r * Math.cos(v)) * Math.sin(u);
+    
+    target.set(x, y, z);
+}
+
+/* END OF parametric functions */ 
+
 function addRings(father_reference) {
     'use strict';
     // the first ring to be constructed is the smallest, next rings are adjacent
@@ -312,7 +409,6 @@ function addRings(father_reference) {
 
         ringsArray[i].position.set(0, previousYCoordinate - yCoordinateinterval, 0);
 
-        //update variable values for the next ring
         previousOuterRing += ringWidth;
         previousYCoordinate -= yCoordinateinterval;
 
@@ -596,6 +692,14 @@ function update() {
     }
     
     _cylinder.rotation.y += cylinder_speed * delta_time;
+
+    figuresMatrix.forEach(vector => {
+        vector.forEach(element => {
+            element.rotation.y += figuresRotationValues[iteration_value++] * delta_time;
+            iteration_value = iteration_value % numberOfFigures;
+        }) 
+    });
+
 }
 
 function animate() {
