@@ -60,6 +60,10 @@ const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
 const phongMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 });
 const toonMaterial = new THREE.MeshToonMaterial({ color: 0x0000ff });
 // const normalMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, normalMap: normalMap });
+/*Lights */
+const spotLight = new THREE.SpotLight(0xffffff, 30);
+const pointLights = [];
+
 
 class Manager {
 
@@ -153,6 +157,81 @@ class SmallBox {
     }
 
 }
+
+function createMobiusStrip(positionX, positionY , positionZ ) {
+    const numU = 50;
+    const numV = 10;
+
+    const vertices = [];
+    const indices = [];
+
+    // Gerar os vértices
+    for (let i = 0; i < numU; i++) {
+        const u = 2 * Math.PI * i / (numU - 1);
+        for (let j = 0; j < numV; j++) {
+            const v = 2 * j / (numV - 1) - 1;
+            const x = (1 + v / 2 * Math.cos(u / 2)) * Math.cos(u);
+            const y = (1 + v / 2 * Math.cos(u / 2)) * Math.sin(u);
+            const z = v / 2 * Math.sin(u / 2);
+            vertices.push(new THREE.Vector3(x, y, z));
+        }
+    }
+
+    // Gerar as faces
+    for (let i = 0; i < numU - 1; i++) {
+        for (let j = 0; j < numV - 1; j++) {
+            const v0 = i * numV + j;
+            const v1 = v0 + 1;
+            const v2 = v0 + numV;
+            const v3 = v2 + 1;
+
+            indices.push(v0, v1, v2);
+            indices.push(v1, v3, v2);
+        }
+    }
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: true });
+
+    const mobiusStrip = new THREE.Mesh(geometry, material);
+    mobiusStrip.rotation.x = Math.PI / 2;
+    mobiusStrip.position.set(positionX, positionY, positionZ);
+    mobiusStrip.scale.set(1.5, 1.5, 1.5);
+    scene.add(mobiusStrip);
+}
+
+function addLights(scene) {
+    // Criar oito luzes pontuais
+    for (let i = 0; i < 8; i++) {
+        const pointLight = new THREE.PointLight(0xffffff, 15);
+        pointLight.position.set(0, 0, 0);
+        scene.add(pointLight);
+        pointLights.push(pointLight);
+    }
+
+    // Posicionar as luzes pontuais
+    pointLights.forEach((pointLight, index) => {
+        const angle = (Math.PI * 2 * index) / 8; // Espaçamento angular uniforme
+        const radius = 2; // Raio da circunferência onde as luzes serão posicionadas
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        pointLight.position.set(x, y, 0); // Posicionar a luz
+    });
+
+    // Criar a luz de holofote
+    spotLight.position.set(0, 0,0 );
+    spotLight.angle = Math.PI / 4;
+    spotLight.penumbra = 0.1;
+    spotLight.decay = 2;
+    spotLight.distance = 200;
+    scene.add(spotLight);
+
+    // Posicionar a luz de holofote
+    spotLight.position.set(10, 10,10); // Posicionar a luz de holofote ligeiramente acima da base da faixa de Möbius
+}
+
 
 function addRings(father_reference) {
     'use strict';
@@ -321,7 +400,8 @@ function createScene() {
     addCylinder(_cylinder);
     addRings(_cylinder);
     addFigures();
-    
+    createMobiusStrip(0,11,0);
+    addLights(scene);
     scene.add(_cylinder);
     
     // Câmeras ortográficas
@@ -452,8 +532,13 @@ function onKeyDown(event) {
             break;
         case 'p':
         case 'P':
-            // TODO: ligar / desligar luzes pontuais e spotlight
+            pointLights.forEach((pointLight) => {
+                pointLight.visible = !pointLight.visible;
+            });
             break;
+        case 's':
+        case 'S':
+            spotLight.visible = !spotLight.visible;
         case 'd':
         case 'D':
             //TODO: desligar / ligar fonte de luz
