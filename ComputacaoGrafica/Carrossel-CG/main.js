@@ -97,6 +97,9 @@ class Manager {
                 // newMaterial = normalMaterial;
                 return;
                 break;
+            case '4':
+                newMaterial = new THREE.MeshBasicMaterial({ color: Colors.ORANGE, wireframe: false });
+                break;
             default:
                 return;
 
@@ -446,10 +449,10 @@ function addCylinder(current_object) {
 
 function onResize() {
     'use strict';
-    renderer.setSize(window.innerWidth, window.innerHeight);
     const aspectRatio = window.innerWidth / window.innerHeight;
     camera.aspect = aspectRatio;
     camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function setActiveCamera(name) {
@@ -664,7 +667,7 @@ function onKeyDown(event) {
             break;
         case 't':
         case 'T':
-            // TODO: desactivar o calculo da iluminacao
+            manager.changeMaterial('4');
             break;
     }
     //render(); -> do we need this here?
