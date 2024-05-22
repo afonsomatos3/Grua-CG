@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { ParametricGeometries } from 'three/addons/geometries/ParametricGeometries.js';
 import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 
 ////////////////////////
@@ -50,14 +49,154 @@ const textureLoader = new THREE.TextureLoader();
 
 /* Materials of choice */
 const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000, side: THREE.DoubleSide });
-const phongMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100, side: THREE.DoubleSide});
+const phongMaterial = new THREE.MeshPhongMaterial({ color: 0x0000ff, shininess: 100, side: THREE.DoubleSide});
 const toonMaterial = new THREE.MeshToonMaterial({ color: 0x0000ff , side : THREE.DoubleSide });
-// const normalMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, normalMap: normalMap });
+const normalMaterial = new THREE.MeshNormalMaterial({ side: 0x0000ff});
+const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500, wireframe: false });
+
 /*Lights */
 const spotLight = new THREE.SpotLight(0xffffff, 30);
 const parametricLights = [];
 const pointLights = [];
 const AmbientLight = new THREE.AmbientLight( 0xFF7F00, 10); 
+
+/* Para apagar 
+
+// node_modules/three/examples/jsm/geometries/ParametricGeometries.js
+var ParametricGeometries = {
+  klein: function(v, u, target) {
+    u *= Math.PI;
+    v *= 2 * Math.PI;
+    u = u * 2;
+    let x, z;
+    if (u < Math.PI) {
+      x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(u) * Math.cos(v);
+      z = -8 * Math.sin(u) - 2 * (1 - Math.cos(u) / 2) * Math.sin(u) * Math.cos(v);
+    } else {
+      x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(v + Math.PI);
+      z = -8 * Math.sin(u);
+    }
+    const y = -2 * (1 - Math.cos(u) / 2) * Math.sin(v);
+    target.set(x, y, z);
+  },
+  plane: function(width, height) {
+    return function(u, v, target) {
+      const x = u * width;
+      const y = 0;
+      const z = v * height;
+      target.set(x, y, z);
+    };
+  },
+  mobius: function(u, t, target) {
+    u = u - 0.5;
+    const v = 2 * Math.PI * t;
+    const a = 2;
+    const x = Math.cos(v) * (a + u * Math.cos(v / 2));
+    const y = Math.sin(v) * (a + u * Math.cos(v / 2));
+    const z = u * Math.sin(v / 2);
+    target.set(x, y, z);
+  },
+  mobius3d: function(u, t, target) {
+    u *= Math.PI;
+    t *= 2 * Math.PI;
+    u = u * 2;
+    const phi = u / 2;
+    const major = 2.25, a = 0.125, b = 0.65;
+    let x = a * Math.cos(t) * Math.cos(phi) - b * Math.sin(t) * Math.sin(phi);
+    const z = a * Math.cos(t) * Math.sin(phi) + b * Math.sin(t) * Math.cos(phi);
+    const y = (major + x) * Math.sin(u);
+    x = (major + x) * Math.cos(u);
+    target.set(x, y, z);
+  }
+};
+ParametricGeometries.TubeGeometry = class TubeGeometry extends ParametricGeometry {
+  constructor(path, segments = 64, radius = 1, segmentsRadius = 8, closed = false) {
+    const numpoints = segments + 1;
+    const frames = path.computeFrenetFrames(segments, closed), tangents = frames.tangents, normals = frames.normals, binormals = frames.binormals;
+    const position = new Vector3();
+    function ParametricTube(u, v, target) {
+      v *= 2 * Math.PI;
+      const i = Math.floor(u * (numpoints - 1));
+      path.getPointAt(u, position);
+      const normal = normals[i];
+      const binormal = binormals[i];
+      const cx = -radius * Math.cos(v);
+      const cy = radius * Math.sin(v);
+      position.x += cx * normal.x + cy * binormal.x;
+      position.y += cx * normal.y + cy * binormal.y;
+      position.z += cx * normal.z + cy * binormal.z;
+      target.copy(position);
+    }
+    super(ParametricTube, segments, segmentsRadius);
+    this.tangents = tangents;
+    this.normals = normals;
+    this.binormals = binormals;
+    this.path = path;
+    this.segments = segments;
+    this.radius = radius;
+    this.segmentsRadius = segmentsRadius;
+    this.closed = closed;
+  }
+};
+ParametricGeometries.TorusKnotGeometry = class TorusKnotGeometry extends ParametricGeometries.TubeGeometry {
+  constructor(radius = 200, tube = 40, segmentsT = 64, segmentsR = 8, p = 2, q = 3) {
+    class TorusKnotCurve extends Curve {
+      getPoint(t, optionalTarget = new Vector3()) {
+        const point = optionalTarget;
+        t *= Math.PI * 2;
+        const r = 0.5;
+        const x = (1 + r * Math.cos(q * t)) * Math.cos(p * t);
+        const y = (1 + r * Math.cos(q * t)) * Math.sin(p * t);
+        const z = r * Math.sin(q * t);
+        return point.set(x, y, z).multiplyScalar(radius);
+      }
+    }
+    const segments = segmentsT;
+    const radiusSegments = segmentsR;
+    const extrudePath = new TorusKnotCurve();
+    super(extrudePath, segments, tube, radiusSegments, true, false);
+    this.radius = radius;
+    this.tube = tube;
+    this.segmentsT = segmentsT;
+    this.segmentsR = segmentsR;
+    this.p = p;
+    this.q = q;
+  }
+};
+ParametricGeometries.SphereGeometry = class SphereGeometry extends ParametricGeometry {
+  constructor(size, u, v) {
+    function sphere(u2, v2, target) {
+      u2 *= Math.PI;
+      v2 *= 2 * Math.PI;
+      const x = size * Math.sin(u2) * Math.cos(v2);
+      const y = size * Math.sin(u2) * Math.sin(v2);
+      const z = size * Math.cos(u2);
+      target.set(x, y, z);
+    }
+    super(sphere, u, v);
+  }
+};
+ParametricGeometries.PlaneGeometry = class PlaneGeometry extends ParametricGeometry {
+  constructor(width, depth, segmentsWidth, segmentsDepth) {
+    function plane(u, v, target) {
+      const x = u * width;
+      const y = 0;
+      const z = v * depth;
+      target.set(x, y, z);
+    }
+    super(plane, segmentsWidth, segmentsDepth);
+  }
+};
+
+export {
+  ParametricGeometries
+};
+//# sourceMappingURL=chunk-HWMZE6FC.js.map
+
+
+*/
+
+// TODO: os aneis podem comecar no meio do cilindro -> por os cilindros a comecar a meio do cilindro com movimento sinusoidal
 
 
 class Manager {
@@ -84,23 +223,18 @@ class Manager {
 
             case '0':
                 newMaterial = lambertMaterial;
-                console.log("case 0");
                 break;
             case '1':
                 newMaterial = phongMaterial;
-                console.log("case 1");
                 break;
             case '2':
                 newMaterial = toonMaterial;
-                console.log("case 2");
                 break;
             case '3':
-                console.log("case 3");
-                // newMaterial = normalMaterial;
-                return;
+                newMaterial = normalMaterial;
                 break;
             case '4':
-                newMaterial = new THREE.MeshBasicMaterial({ color: Colors.ORANGE, wireframe: false });
+                newMaterial = basicMaterial;
                 break;
             default:
                 return;
@@ -108,6 +242,7 @@ class Manager {
         }
 
         this.meshVector.forEach(element => {
+            newMaterial.color = element.material.color;
             element.material = newMaterial;
         });
     
@@ -174,8 +309,8 @@ class Figure {
 
         switch(real_index) {
             case 0:
-                geometry = new ParametricGeometry( ParametricGeometries.klein, 40, 40);
-                scale_value = 0.2;
+                geometry = new ParametricGeometry( parametric_espanta_espiritos, 15, 15);
+                scale_value = 0.5;
                 break;
             case 1:
                 geometry = new ParametricGeometry( parametric_paper, 15, 15);
@@ -706,7 +841,6 @@ function onKeyDown(event) {
             manager.changeMaterial('4');
             break;
     }
-    //render(); -> do we need this here?
 }
 
 function update() {
