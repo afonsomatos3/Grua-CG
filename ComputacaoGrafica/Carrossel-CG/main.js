@@ -49,13 +49,15 @@ const textureLoader = new THREE.TextureLoader();
 // const normalMap = textureLoader.load('some/path/example');
 
 /* Materials of choice */
-const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-const phongMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 });
-const toonMaterial = new THREE.MeshToonMaterial({ color: 0x0000ff });
+const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000, side: THREE.DoubleSide });
+const phongMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100, side: THREE.DoubleSide});
+const toonMaterial = new THREE.MeshToonMaterial({ color: 0x0000ff , side : THREE.DoubleSide });
 // const normalMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, normalMap: normalMap });
 /*Lights */
 const spotLight = new THREE.SpotLight(0xffffff, 30);
+const parametricLights = [];
 const pointLights = [];
+const AmbientLight = new THREE.AmbientLight( 0xFF7F00, 10); 
 
 
 class Manager {
@@ -213,7 +215,7 @@ class Figure {
 
 function createMobiusStrip(positionX, positionY , positionZ ) {
     const numU = 50;
-    const numV = 10;
+    const numV = 100;
 
     const vertices = [];
     const indices = [];
@@ -246,17 +248,21 @@ function createMobiusStrip(positionX, positionY , positionZ ) {
     const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
-    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: true });
+    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side : THREE.DoubleSide });
 
     const mobiusStrip = new THREE.Mesh(geometry, material);
     mobiusStrip.rotation.x = Math.PI / 2;
     mobiusStrip.position.set(positionX, positionY, positionZ);
     mobiusStrip.scale.set(1.5, 1.5, 1.5);
+    manager.addToVector(mobiusStrip);
     scene.add(mobiusStrip);
 }
 
 function addLights(scene) {
+    let light_angle = ( 2 * Math.PI ) / numberOfFigures;
+    let light_height = ringDepth + 0.5;
 
+    /*
     for (let i = 0; i < 8; i++) {
         const pointLight = new THREE.PointLight(0xffffff, 15);
         pointLight.position.set(0, 0, 0);
@@ -268,11 +274,36 @@ function addLights(scene) {
     pointLights.forEach((pointLight, index) => {
         const angle = (Math.PI * 2 * index) / 8;
         const radius = 2; 
+        const height = index % 2 === 0 ? 1 : -1; // Alterna entre altura positiva e negativa para atingir tanto a parte interna quanto a externa da faixa
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
-        pointLight.position.set(x, y, 0); 
-    });
+        pointLight.position.set(x, y, height * 0.5); // Ajusta a altura para iluminar ambas as partes da faixa
+    }); */
 
+    for (let i = 0; i < 8; i++){
+        const parametricLight = new THREE.PointLight(0xffffff, 15);
+        parametricLight.position.set(0, 0, 0);
+        scene.add(parametricLight);
+        parametricLights.push(parametricLight);
+    }
+
+    for (let i = 0; i < numberOfRings; i++) {
+        
+        let current_radius = cilinder_radius + ( i * ringWidth );
+        let distanceToCenter = current_radius + ( ringWidth / 2 );
+        
+        for (let j = 0; j < numberOfFigures; j++) {
+            parametricLights[i][j] = new THREE.SpotLight(0xffffff, 30);
+            //  calculate and apply the correct posicion/orientation for each light
+            parametricLights[i][j].position.set( distanceToCenter * Math.cos( ( j * light_angle ) ), light_height , distanceToCenter * Math.sin( ( j * light_angle ) ));
+            parametricLights[i][j].rotation.set(0, - j * light_angle, 0);
+            
+            ringsArray[i].add(parametricLights[i][j]);
+
+        } 
+    }
+    
+    
    
     spotLight.position.set(0, 0,0 );
     spotLight.angle = Math.PI / 4;
@@ -283,6 +314,8 @@ function addLights(scene) {
 
     
     spotLight.position.set(10, 10,10);
+
+    scene.add( AmbientLight );
 }
 
 /* parametric functions */ 
@@ -566,7 +599,8 @@ function render() {
     renderer.render(scene, camera);
 }
 
-function initArrays() {
+function 
+initArrays() {
     'use strict';
 
     // outer for loop: initialize ringsArray with the previously defined number of rings
@@ -578,6 +612,7 @@ function initArrays() {
         manager.addToVector(mesh);
 
         figuresMatrix[t] = [];
+        parametricLights[t] = [];
 
         for (let k = 0; k < numberOfFigures; k++ ) {
             const mesh = new THREE.Mesh();
@@ -654,16 +689,17 @@ function onKeyDown(event) {
             break;
         case 'p':
         case 'P':
-            pointLights.forEach((pointLight) => {
-                pointLight.visible = !pointLight.visible;
+            parametricLights.forEach((parametricLight) => {
+                parametricLight.forEach((parametricLights) => {
+                    parametricLights.visible = !parametricLights.visible;  
+                })
             });
             break;
         case 's':
         case 'S':
-            spotLight.visible = !spotLight.visible;
         case 'd':
         case 'D':
-            //TODO: desligar / ligar fonte de luz
+            spotLight.visible = !spotLight.visible;
             break;
         case 't':
         case 'T':
