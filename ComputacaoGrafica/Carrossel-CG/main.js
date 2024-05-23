@@ -393,6 +393,31 @@ function createMobiusStrip(positionX, positionY , positionZ ) {
     scene.add(mobiusStrip);
 }
 
+function addSkyDome() {
+    'use strict';
+    //ADD A SKYDOME: a big concave half sphere on top of the cylinder
+    const skyDome = new THREE.Mesh();
+    const skyDomeGeometry = new THREE.SphereGeometry( 50, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 );
+    const skyDomeMaterial = new THREE.MeshBasicMaterial({ color: Colors.BLUE, side: THREE.DoubleSide });
+    //skyDome.material.wireframe = true;
+    //add texture to the skyDome
+    const texture = new THREE.TextureLoader().load('2024-05-23.png');
+
+    skyDomeMaterial.map = texture;
+    skyDomeMaterial.side = THREE.DoubleSide;
+
+    skyDome.geometry = skyDomeGeometry;
+    skyDome.material = skyDomeMaterial;
+    skyDome.position.set(0, 0, 0);
+
+    manager.addToVector(skyDome.material); //what does this do?
+
+
+    scene.add(skyDome);
+
+
+}
+
 function addLights(scene) {
     let light_angle = ( 2 * Math.PI ) / numberOfFigures;
     let light_height = ringDepth + 0.5;
@@ -698,6 +723,7 @@ function createScene() {
     // scene.add(new THREE.AxesHelper(10));
     
     // add objects hierarchically
+    addSkyDome();
     addCylinder(_cylinder);
     addRings(_cylinder);
     addFigures();
