@@ -55,10 +55,10 @@ const normalMaterial = new THREE.MeshNormalMaterial({ side: 0x0000ff});
 const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500, wireframe: false });
 
 /*Lights */
-const spotLight = new THREE.SpotLight(0xffffff, 30);
+const DirectionalLight = new THREE.DirectionalLight(0xffffff, 1);
 const parametricLights = [];
 const pointLights = [];
-const AmbientLight = new THREE.AmbientLight( 0xFF7F00, 10); 
+const AmbientLight = new THREE.AmbientLight( 0xff7f00, 10); 
 
 /* Para apagar 
 
@@ -348,7 +348,7 @@ class Figure {
     }
 }
 
-function createMobiusStrip(positionX, positionY , positionZ ) {
+function createMobiusStrip(positionX, positionY, positionZ) {
     const numU = 50;
     const numV = 100;
 
@@ -383,16 +383,32 @@ function createMobiusStrip(positionX, positionY , positionZ ) {
     const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
-    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side : THREE.DoubleSide });
+    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
 
     const mobiusStrip = new THREE.Mesh(geometry, material);
     mobiusStrip.rotation.x = Math.PI / 2;
+
+    // Add Pontual Lights
+    for (let i = 0; i < 8; i++) {
+        const angle = (2 * Math.PI * i) / 8; 
+        const x = Math.cos(angle);
+        const y = Math.sin(angle);
+        const z = -1; 
+
+        const pointLight = new THREE.PointLight(0xffffff, 1, 0);
+        pointLight.position.set(x, y, z); z
+        const target = new THREE.Object3D(); 
+        target.position.set(x, 20, z); // Define light's target
+        pointLight.target = target; 
+        mobiusStrip.add(pointLight); 
+        pointLights.push(pointLight); 
+    }
+    
     mobiusStrip.position.set(positionX, positionY, positionZ);
     mobiusStrip.scale.set(1.5, 1.5, 1.5);
     manager.addToVector(mobiusStrip);
     scene.add(mobiusStrip);
 }
-
 function addSkyDome() {
     'use strict';
     //ADD A SKYDOME: a big concave half sphere on top of the cylinder
@@ -421,59 +437,40 @@ function addSkyDome() {
 function addLights(scene) {
     let light_angle = ( 2 * Math.PI ) / numberOfFigures;
     let light_height = ringDepth + 0.5;
-
-    /*
-    for (let i = 0; i < 8; i++) {
-        const pointLight = new THREE.PointLight(0xffffff, 15);
-        pointLight.position.set(0, 0, 0);
-        scene.add(pointLight);
-        pointLights.push(pointLight);
-    }
-
     
-    pointLights.forEach((pointLight, index) => {
-        const angle = (Math.PI * 2 * index) / 8;
-        const radius = 2; 
-        const height = index % 2 === 0 ? 1 : -1; // Alterna entre altura positiva e negativa para atingir tanto a parte interna quanto a externa da faixa
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-        pointLight.position.set(x, y, height * 0.5); // Ajusta a altura para iluminar ambas as partes da faixa
-    }); */
+// Parametric Spot Lights
+for (let i = 0; i < numberOfRings; i++) {
+    parametricLights[i] = [];
+    let current_radius = cilinder_radius + (i * ringWidth);
+    let distanceToCenter = current_radius + (ringWidth / 2);
 
-    for (let i = 0; i < 8; i++){
-        const parametricLight = new THREE.PointLight(0xffffff, 15);
-        parametricLight.position.set(0, 0, 0);
-        scene.add(parametricLight);
-        parametricLights.push(parametricLight);
-    }
+    for (let j = 0; j < numberOfFigures; j++) {
+        const spotLight = new THREE.SpotLight(0xffffff, 5);
+        const angle = (j * light_angle);
 
-    for (let i = 0; i < numberOfRings; i++) {
+        spotLight.position.set(
+            distanceToCenter * Math.cos(angle),
+            light_height + 1,
+            distanceToCenter * Math.sin(angle)
+        );
+
+        // Define orientation of lights, (0,1,0)
+        const target = new THREE.Object3D();
+        target.position.set(
+            distanceToCenter * Math.cos(angle),
+            light_height,
+            distanceToCenter * Math.sin(angle)
+        );
+        ringsArray[i].add(target); 
+        spotLight.target = target; 
+
         
-        let current_radius = cilinder_radius + ( i * ringWidth );
-        let distanceToCenter = current_radius + ( ringWidth / 2 );
-        
-        for (let j = 0; j < numberOfFigures; j++) {
-            parametricLights[i][j] = new THREE.SpotLight(0xffffff, 30);
-            //  calculate and apply the correct posicion/orientation for each light
-            parametricLights[i][j].position.set( distanceToCenter * Math.cos( ( j * light_angle ) ), light_height , distanceToCenter * Math.sin( ( j * light_angle ) ));
-            parametricLights[i][j].rotation.set(0, - j * light_angle, 0);
-            
-            ringsArray[i].add(parametricLights[i][j]);
-
-        } 
+        parametricLights[i].push(spotLight);
+        ringsArray[i].add(spotLight); 
     }
-    
-    
-   
-    spotLight.position.set(0, 0,0 );
-    spotLight.angle = Math.PI / 4;
-    spotLight.penumbra = 0.1;
-    spotLight.decay = 2;
-    spotLight.distance = 200;
-    scene.add(spotLight);
-
-    
-    spotLight.position.set(10, 10,10);
+    }
+    DirectionalLight.position.set(10,3,2);
+    scene.add(DirectionalLight);
 
     scene.add( AmbientLight );
 }
@@ -850,17 +847,20 @@ function onKeyDown(event) {
             break;
         case 'p':
         case 'P':
-            parametricLights.forEach((parametricLight) => {
-                parametricLight.forEach((parametricLights) => {
-                    parametricLights.visible = !parametricLights.visible;  
-                })
+            pointLights.forEach((pointLight) => {
+                    pointLight.visible = !pointLight.visible;  
             });
             break;
         case 's':
-        case 'S':
+        case 'S': 
+            parametricLights.forEach((parametricLight) => {
+            parametricLight.forEach((parametricLights) => {
+                parametricLights.visible = !parametricLights.visible;  
+            })
+            });
         case 'd':
         case 'D':
-            spotLight.visible = !spotLight.visible;
+            DirectionalLight.visible = !DirectionalLight.visible;
             break;
         case 't':
         case 'T':
