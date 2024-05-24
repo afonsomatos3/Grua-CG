@@ -19,16 +19,23 @@ let elapsed_time_3 = 0;
 let initial_ring_height_1;
 let initial_ring_height_2;
 let initial_ring_height_3;
+let ring1_cooldown = 0;
+let ring2_cooldown = 0;
+let ring3_cooldown = 0;
+let button_cooldown = 0.3; // time in seconds
 
 /* Control variables for the carousel */
 
 let _cylinder  = new THREE.Mesh();
 let cilinder_radius = 2; // the rings will be constructed adjacent to the cilinder and eachother
+const cylinder_height = 10;
+    
 
 let ringWidth = 3; // defined to be the same for every ring
 let numberOfRings = 3;
 let ringDepth = 1; // depth ( or height ) of every ring
 const ringsArray = [];
+const ringColors = [0x0000FF, 0x00ff00, 0xFF0000];
 
 let numberOfFigures = 8; // number of figures per ring
 const figuresMatrix = [];
@@ -42,6 +49,8 @@ let should_rotate_3 = false;
 
 let ring_speed = 1.3;
 let cylinder_speed = 1;
+
+const mobiusStrip = new THREE.Mesh();
 
 /* normal Map definition for material normalMaterial */
 const textureLoader = new THREE.TextureLoader();
@@ -202,11 +211,6 @@ export {
 class Manager {
 
     constructor() {
-        this.meshVector = [];
-    }
-
-    addToVector(mesh) {
-        this.meshVector.push(mesh);
     }
 
     toggleWireframe() {
@@ -215,48 +219,79 @@ class Manager {
         });
     }
 
-    changeMaterial(choice) {
+    getMaterial(choice) {
 
         let newMaterial;
 
         switch (choice) {
 
-            case '0':
-                newMaterial = lambertMaterial;
+            case 'q':
+                //newMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF, side: THREE.DoubleSide });
+                newMaterial = new THREE.MeshLambertMaterial({ color: 0x0000FF, side: THREE.DoubleSide });
+                return newMaterial;
                 break;
-            case '1':
-                newMaterial = phongMaterial;
+            case 'w':
+
+                //newMaterial = phongMaterial;
+                newMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100, side: THREE.DoubleSide });
+                return newMaterial;
                 break;
-            case '2':
-                newMaterial = toonMaterial;
+            case 'e':
+
+                //newMaterial = toonMaterial;
+                newMaterial = new THREE.MeshToonMaterial({ color: 0xFF0000, side: THREE.DoubleSide });
+                return newMaterial;
                 break;
-            case '3':
-                newMaterial = normalMaterial;
+            case 'r':
+
+                //newMaterial = normalMaterial;
+                newMaterial = new THREE.MeshNormalMaterial({ side: 0x800080 });
+                return newMaterial;
                 break;
-            case '4':
-                newMaterial = basicMaterial;
+            case 't':
+                //newMaterial = basicMaterial;
+                newMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500, wireframe: false, side: THREE.DoubleSide });
+                return newMaterial;
                 break;
             default:
                 return;
 
         }
 
-        this.meshVector.forEach(element => {
-            newMaterial.color = element.material.color;
-            element.material = newMaterial;
-        });
+    }
+
+    changeMaterial(choice) {
+
+        let i = 0;
+
+        if (choice === 'r') {
+            console.log("fuck you");
+        } else {
+            ringsArray.forEach(element => {
     
+                element.material = this.getMaterial(choice);
+                element.material.color.setHex(ringColors[i++]);
+                
+            });
+            
+            figuresMatrix.forEach(element => {
+                element.forEach(figure => {
+                    figure.material = this.getMaterial(choice);
+                    figure.material.color.setHex(0xFFA500);
+                });
+            });
+
+            _cylinder.material = this.getMaterial(choice);
+            _cylinder.material.color.setHex(0x800080);
+            
+            mobiusStrip.material = this.getMaterial(choice);
+            mobiusStrip.material.color.setHex(0xFFFF00);
+
+        }
+
     }
 
 }
-
-const Colors = {
-    RED: 0xFF0000,
-    GREEN: 0x00ff00,
-    BLUE: 0x0000FF,
-    PURPLE: 0x800080,
-    ORANGE: 0xFFA500,
-};
 
 let manager = new Manager();
 
@@ -304,7 +339,7 @@ class Figure {
         
         let real_index = (index % 8);
         let geometry;
-        let material = new THREE.MeshBasicMaterial({ color: Colors.ORANGE, wireframe: true });
+        let material = new THREE.MeshBasicMaterial({ color: 0xFFA500, wireframe: true });
         let scale_value = 1;
 
         switch(real_index) {
@@ -344,6 +379,7 @@ class Figure {
 
         let mesh = new THREE.Mesh(geometry, material);
         mesh.scale.set(scale_value, scale_value, scale_value);
+
         return mesh;
     }
 }
@@ -385,7 +421,8 @@ function createMobiusStrip(positionX, positionY, positionZ) {
     geometry.computeVertexNormals();
     const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
 
-    const mobiusStrip = new THREE.Mesh(geometry, material);
+    mobiusStrip.geometry = geometry;
+    mobiusStrip.material = material;
     mobiusStrip.rotation.x = Math.PI / 2;
 
     // Add Pontual Lights
@@ -406,15 +443,15 @@ function createMobiusStrip(positionX, positionY, positionZ) {
     
     mobiusStrip.position.set(positionX, positionY, positionZ);
     mobiusStrip.scale.set(1.5, 1.5, 1.5);
-    manager.addToVector(mobiusStrip);
     scene.add(mobiusStrip);
 }
+
 function addSkyDome() {
     'use strict';
     //ADD A SKYDOME: a big concave half sphere on top of the cylinder
     const skyDome = new THREE.Mesh();
     const skyDomeGeometry = new THREE.SphereGeometry( 50, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 );
-    const skyDomeMaterial = new THREE.MeshBasicMaterial({ color: Colors.BLUE, side: THREE.DoubleSide });
+    const skyDomeMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.DoubleSide });
     //skyDome.material.wireframe = true;
     //add texture to the skyDome
     const texture = new THREE.TextureLoader().load('2024-05-23.png');
@@ -425,8 +462,6 @@ function addSkyDome() {
     skyDome.geometry = skyDomeGeometry;
     skyDome.material = skyDomeMaterial;
     skyDome.position.set(0, 0, 0);
-
-    manager.addToVector(skyDome.material); //what does this do?
 
 
     scene.add(skyDome);
@@ -580,8 +615,6 @@ function addRings(father_reference) {
         curveSegments: 28,
     };
 
-    let ringColors = [Colors.BLUE, Colors.GREEN, Colors.RED];
-
     for (let i = 0; i < numberOfRings; i++) {
 
         const shape = new THREE.Shape();
@@ -593,11 +626,13 @@ function addRings(father_reference) {
         shape.holes.push(innerCircle);
 
         const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        const material = new THREE.MeshBasicMaterial({ color: ringColors[i], side: THREE.DoubleSide });
- 
+        //const material = new THREE.MeshBasicMaterial({ color: ringColors[i], side: THREE.DoubleSide });
+        const material = new THREE.MeshLambertMaterial({ color: ringColors[i], side: THREE.DoubleSide });
+
+
         ringsArray[i].geometry = geometry;
-        ringsArray[i].geometry.rotateX( - Math.PI / 2);
-        
+        ringsArray[i].geometry.rotateX(- Math.PI / 2);
+
         ringsArray[i].material = material;
 
         ringsArray[i].position.set(0, previousYCoordinate - yCoordinateinterval, 0);
@@ -614,12 +649,11 @@ function addRings(father_reference) {
 function addCylinder(current_object) {
     'use strict';
 
-    let height = 10;
     let radius = cilinder_radius;
 
     const extrudeSettings = {
         steps: 1,
-        depth: height,
+        depth: cylinder_height,
         bevelEnabled: false,
         curveSegments: 28,
     };
@@ -628,7 +662,7 @@ function addCylinder(current_object) {
     shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
 
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    const material = new THREE.MeshBasicMaterial({ color: Colors.PURPLE, side: THREE.DoubleSide });
+    const material = new THREE.MeshBasicMaterial({ color: 0x800080, side: THREE.DoubleSide });
     
     current_object.geometry = geometry;
     geometry.rotateX( - Math.PI / 2);
@@ -727,8 +761,6 @@ function createScene() {
     createMobiusStrip(0,11,0);
     addLights(scene);
     scene.add(_cylinder);
-
-    // manager.changeMaterial('0');
     
     // Câmeras ortográficas
     const viewSize = 30;
@@ -767,7 +799,6 @@ initArrays() {
         
         const mesh = new THREE.Mesh();
         ringsArray.push(mesh);
-        manager.addToVector(mesh);
 
         figuresMatrix[t] = [];
         parametricLights[t] = [];
@@ -775,7 +806,6 @@ initArrays() {
         for (let k = 0; k < numberOfFigures; k++ ) {
             const mesh = new THREE.Mesh();
             figuresMatrix[t].push(mesh);
-            manager.addToVector(mesh);
         }
     }
 }
@@ -785,8 +815,6 @@ function init() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-
-    manager.addToVector(_cylinder);
 
     initArrays();
 
@@ -806,16 +834,25 @@ function onKeyDown(event) {
 
     switch (event.key) {
         case '1':
-            should_rotate_1 = !should_rotate_1;
+            if (ring1_cooldown > button_cooldown) {
+                should_rotate_1 = !should_rotate_1;
+                ring1_cooldown = 0;
+            }
             setActiveCamera('Frontal');
             break;
         case '2':
-            should_rotate_2 = !should_rotate_2;
-            setActiveCamera('Lateral');
+            if (ring2_cooldown > button_cooldown) {
+                should_rotate_2 = !should_rotate_2;
+                ring2_cooldown = 0;
+            }
+            //setActiveCamera('Lateral');
             break;
         case '3':
-            should_rotate_3 = !should_rotate_3;
-            setActiveCamera('Topo');
+            if (ring3_cooldown > button_cooldown) {
+                should_rotate_3 = !should_rotate_3;
+                ring3_cooldown = 0;
+            }
+            //setActiveCamera('Topo');
             break;
         case '4':
             setActiveCamera('Perspectiva');
@@ -827,23 +864,23 @@ function onKeyDown(event) {
             setActiveCamera('Garra');
             break;
         case '7':
-            manager.toggleWireframe();
+            //manager.toggleWireframe();
             break;
         case 'q':
         case 'Q':
-            manager.changeMaterial('0');
+            manager.changeMaterial('q');
             break;
         case 'e':
         case 'E':
-            manager.changeMaterial('2');
+            manager.changeMaterial('e');
             break;
         case 'w':
         case 'W':
-            manager.changeMaterial('1');
+            manager.changeMaterial('w');
             break;
         case 'r':
         case 'R':
-            manager.changeMaterial('3');
+            manager.changeMaterial('r');
             break;
         case 'p':
         case 'P':
@@ -864,7 +901,7 @@ function onKeyDown(event) {
             break;
         case 't':
         case 'T':
-            manager.changeMaterial('4');
+            manager.changeMaterial('t');
             break;
     }
 }
@@ -874,19 +911,22 @@ function update() {
     
     delta_time = clock.getDelta();
     
+    ring1_cooldown += delta_time;
+    ring2_cooldown += delta_time;
+    ring3_cooldown += delta_time;
 
     if (should_rotate_1) {    
-        ringsArray[0].position.y = Math.sin( (initial_ring_height_1 + elapsed_time_1) * ring_speed );
+        ringsArray[0].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_1) * ring_speed ) * ( height / 2 ) ) + ( height / 2 ) );
         elapsed_time_1 += delta_time;
     }
     
     if (should_rotate_2) {
-        ringsArray[1].position.y = Math.sin( (initial_ring_height_2 + elapsed_time_2) * ring_speed );
+        ringsArray[1].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_2) * ring_speed ) * ( height / 2 ) ) + ( height / 2 ) );
         elapsed_time_2 += delta_time;
     }
 
     if (should_rotate_3) {
-        ringsArray[2].position.y = Math.sin( (initial_ring_height_3 + elapsed_time_3) * ring_speed );
+        ringsArray[2].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_2) * ring_speed ) * ( height / 2 ) ) + ( height / 2 ) );
         elapsed_time_3 += delta_time;
     }
     
