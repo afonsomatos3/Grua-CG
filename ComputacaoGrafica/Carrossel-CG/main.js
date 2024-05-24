@@ -651,10 +651,15 @@ function init() {
     'use strict';
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.xr.enabled = true;
     document.body.appendChild(renderer.domElement);
 
+    renderer.xr.enabled = true;
     document.body.appendChild( VRButton.createButton( renderer ) );
+    
+    //add vr button
+    const vrButton = VRButton.createButton(renderer);
+    document.body.appendChild(vrButton);
+
     
     const color = new THREE.Color(1, 0, 0);
     manager.addToVector(_cylinder,color);
@@ -671,6 +676,13 @@ function init() {
 
     window.addEventListener('resize', onResize);
     window.addEventListener('keydown', onKeyDown);
+
+    renderer.setAnimationLoop( function() {
+    
+        update();
+        render();
+    });
+    
 }
 
 function onKeyDown(event) {
@@ -761,13 +773,5 @@ function update() {
 
 }
 
-function animate() {
-    'use strict';
-
-    update();
-    render();
-    requestAnimationFrame(animate);
-}
 
 init();
-animate();
