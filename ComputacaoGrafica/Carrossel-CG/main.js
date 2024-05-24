@@ -52,7 +52,7 @@ const textureLoader = new THREE.TextureLoader();
 const lambertMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000, side: THREE.DoubleSide });
 const phongMaterial = new THREE.MeshPhongMaterial({ color: 0x0000ff, shininess: 100, side: THREE.DoubleSide});
 const toonMaterial = new THREE.MeshToonMaterial({ color: 0x0000ff , side : THREE.DoubleSide });
-const normalMaterial = new THREE.MeshNormalMaterial({ side: 0x0000ff, side : THREE.DoubleSide});
+const normalMaterial = new THREE.MeshNormalMaterial({ color: 0x0000ff, side : THREE.DoubleSide});
 const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500, side: THREE.DoubleSide,wireframe: false });
 
 /*Lights */
@@ -69,7 +69,8 @@ class Manager {
     }
 
     addToVector(mesh) {
-        this.meshVector.push(mesh);
+        const originalColor = mesh.material.color.clone();
+        this.meshVector.push({originalColor,mesh});
     }
 
     toggleWireframe() {
@@ -104,9 +105,11 @@ class Manager {
 
         }
 
-        this.meshVector.forEach(element => {
-            newMaterial.color = element.material.color;
-            element.material = newMaterial;
+        this.meshVector.forEach(({ mesh, originalColor }) => {
+            if (mesh instanceof THREE.Mesh && originalColor instanceof THREE.Color){
+                mesh.material = newMaterial; 
+                mesh.material.color= originalColor;
+            }
         });
     
     }
@@ -246,9 +249,9 @@ function createMobiusStrip(positionX, positionY, positionZ) {
     const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
-    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-
-    const mobiusStrip = new THREE.Mesh(geometry, material);
+    const material = basicMaterial;
+    
+    const mobiusStrip = new THREE.Mesh(geometry,material);
     mobiusStrip.rotation.x = Math.PI / 2;
 
     // Add Pontual Lights
@@ -269,7 +272,8 @@ function createMobiusStrip(positionX, positionY, positionZ) {
     
     mobiusStrip.position.set(positionX, positionY, positionZ);
     mobiusStrip.scale.set(1.5, 1.5, 1.5);
-    manager.addToVector(mobiusStrip);
+    const color = new THREE.Color(0, 0, 1);
+    manager.addToVector(mobiusStrip,color);
     scene.add(mobiusStrip);
 }
 function addSkyDome() {
@@ -289,7 +293,6 @@ function addSkyDome() {
     skyDome.material = skyDomeMaterial;
     skyDome.position.set(0, 0, 0);
 
-    manager.addToVector(skyDome.material); //what does this do?
 
 
     scene.add(skyDome);
@@ -623,14 +626,14 @@ function render() {
 function 
 initArrays() {
     'use strict';
-
     // outer for loop: initialize ringsArray with the previously defined number of rings
     // inner for loop: initialize figuresMatrix with the previously defined number of figures per ring
     for ( let t = 0; t < numberOfRings; t++ ) {
         
         const mesh = new THREE.Mesh();
         ringsArray.push(mesh);
-        manager.addToVector(mesh);
+        const color = new THREE.Color(1, 1, 0);
+        manager.addToVector(mesh,color);
 
         figuresMatrix[t] = [];
         parametricLights[t] = [];
@@ -638,7 +641,8 @@ initArrays() {
         for (let k = 0; k < numberOfFigures; k++ ) {
             const mesh = new THREE.Mesh();
             figuresMatrix[t].push(mesh);
-            manager.addToVector(mesh);
+            const color_figure = new THREE.Color(1, 0, 1);
+            manager.addToVector(mesh,color_figure);
         }
     }
 }
@@ -651,8 +655,9 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     document.body.appendChild( VRButton.createButton( renderer ) );
-
-    manager.addToVector(_cylinder);
+    
+    const color = new THREE.Color(1, 0, 0);
+    manager.addToVector(_cylinder,color);
 
     initArrays();
 
@@ -672,9 +677,15 @@ function onKeyDown(event) {
 
     switch (event.key) {
         case '1':
-            setActiveCamera('Perspectiva');
+            should_rotate_1 = !should_rotate_1;
             break;
         case '2':
+            should_rotate_2 = !should_rotate_2;
+            break;
+        case '3':
+            should_rotate_3 = !should_rotate_3;
+            break;
+        case '4':
             manager.toggleWireframe();
             break;
         case 'q':
@@ -702,9 +713,9 @@ function onKeyDown(event) {
         case 's':
         case 'S': 
             parametricLights.forEach((parametricLight) => {
-            parametricLight.forEach((parametricLights) => {
-                parametricLights.visible = !parametricLights.visible;  
-            })
+                parametricLight.forEach((parametricLights) => {
+                    parametricLights.visible = !parametricLights.visible;  
+                })
             });
             break;
         case 'd':
