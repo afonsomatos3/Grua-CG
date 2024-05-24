@@ -128,7 +128,21 @@ class Manager {
         let i = 0;
 
         if (choice === 'r') {
-            console.log("fuck you");
+            ringsArray.forEach(element => {
+    
+                element.material = this.getMaterial(choice);
+                
+            });
+            
+            figuresMatrix.forEach(element => {
+                element.forEach(figure => {
+                    figure.material = this.getMaterial(choice);
+                });
+            });
+
+            _cylinder.material = this.getMaterial(choice);
+            
+            mobiusStrip.material = this.getMaterial(choice);
         } else {
             ringsArray.forEach(element => {
     
@@ -207,7 +221,7 @@ class Figure {
 
         switch(real_index) {
             case 0:
-                geometry = new ParametricGeometry( parametric_espanta_espiritos, 15, 15);
+                geometry = new ParametricGeometry( parametric_sphere, 15, 15);
                 scale_value = 0.5;
                 break;
             case 1:
@@ -417,6 +431,16 @@ function parametric_paper(u, v, target) {
 
     target.set(x, y, z);
 }
+
+function parametric_sphere(u, v, target) {
+    const size = 3;
+    u *= Math.PI;
+    v *= 2 * Math.PI;
+    const x = size * Math.sin(u) * Math.cos(v);
+    const y = size * Math.sin(u) * Math.sin(v);
+    const z = size * Math.cos(u);
+    target.set(x, y + 3, z);
+  }
 
 function parametric_thing(u, v, target) {
     let R = 3;
@@ -718,33 +742,18 @@ function onKeyDown(event) {
                 should_rotate_1 = !should_rotate_1;
                 ring1_cooldown = 0;
             }
-            setActiveCamera('Frontal');
             break;
         case '2':
             if (ring2_cooldown > button_cooldown) {
                 should_rotate_2 = !should_rotate_2;
                 ring2_cooldown = 0;
             }
-            //setActiveCamera('Lateral');
             break;
         case '3':
             if (ring3_cooldown > button_cooldown) {
                 should_rotate_3 = !should_rotate_3;
                 ring3_cooldown = 0;
             }
-            //setActiveCamera('Topo');
-            break;
-        case '4':
-            setActiveCamera('Perspectiva');
-            break;
-        case '5':
-            setActiveCamera('OrtograficaDinamica');
-            break;
-        case '6':
-            setActiveCamera('Garra');
-            break;
-        case '7':
-            //manager.toggleWireframe();
             break;
         case 'q':
         case 'Q':
