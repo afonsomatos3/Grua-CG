@@ -797,17 +797,17 @@ function update() {
     ring3_cooldown += delta_time;
 
     if (should_rotate_1) {    
-        ringsArray[0].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_1) * ring_speed ) * ( height / 2 ) ) + ( height / 2 ) );
+        ringsArray[0].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_1) * ring_speed ) * ( cylinder_height / 2 ) ) + ( cylinder_height / 2 ) );
         elapsed_time_1 += delta_time;
     }
     
     if (should_rotate_2) {
-        ringsArray[1].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_2) * ring_speed ) * ( height / 2 ) ) + ( height / 2 ) );
+        ringsArray[1].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_2) * ring_speed ) * ( cylinder_height / 2 ) ) + ( cylinder_height / 2 ) );
         elapsed_time_2 += delta_time;
     }
 
     if (should_rotate_3) {
-        ringsArray[2].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_2) * ring_speed ) * ( height / 2 ) ) + ( height / 2 ) );
+        ringsArray[2].position.y = ( ( Math.sin( (initial_ring_height_1 + elapsed_time_2) * ring_speed ) * ( cylinder_height / 2 ) ) + ( cylinder_height / 2 ) );
         elapsed_time_3 += delta_time;
     }
     
